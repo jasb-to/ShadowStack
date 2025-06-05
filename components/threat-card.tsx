@@ -3,20 +3,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, Shield, Zap, Clock } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface ThreatCardProps {
   threat: {
     id: string
     name: string
-    sourceIp: string
+    source_ip: string
     severity: "low" | "medium" | "high" | "critical"
     timestamp: string
     type: string
     blocked: boolean
   }
+  index: number
 }
 
-export function ThreatCard({ threat }: ThreatCardProps) {
+export function ThreatCard({ threat, index }: ThreatCardProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "low":
@@ -47,37 +49,60 @@ export function ThreatCard({ threat }: ThreatCardProps) {
     }
   }
 
+  const getCardGlow = (severity: string) => {
+    switch (severity) {
+      case "low":
+        return "shadow-glow-green"
+      case "medium":
+        return "shadow-glow"
+      case "high":
+        return "shadow-glow-blue"
+      case "critical":
+        return "shadow-glow-red"
+      default:
+        return "shadow-glow"
+    }
+  }
+
   return (
-    <Card className="threat-card-glow border-border/50 hover:border-primary/50 transition-all duration-300">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">{threat.name}</CardTitle>
-          <Badge className={`${getSeverityColor(threat.severity)} flex items-center gap-1`}>
-            {getSeverityIcon(threat.severity)}
-            {threat.severity.toUpperCase()}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Source IP:</span>
-          <span className="font-mono">{threat.sourceIp}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Type:</span>
-          <span>{threat.type}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Status:</span>
-          <Badge variant={threat.blocked ? "destructive" : "secondary"}>
-            {threat.blocked ? "Blocked" : "Monitoring"}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
-          <Clock className="h-3 w-3" />
-          {new Date(threat.timestamp).toLocaleString()}
-        </div>
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+    >
+      <Card
+        className={`${getCardGlow(threat.severity)} border-border/50 hover:border-primary/50 transition-all duration-300`}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold">{threat.name}</CardTitle>
+            <Badge className={`${getSeverityColor(threat.severity)} flex items-center gap-1`}>
+              {getSeverityIcon(threat.severity)}
+              {threat.severity.toUpperCase()}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Source IP:</span>
+            <span className="font-mono">{threat.source_ip}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Type:</span>
+            <span>{threat.type}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Status:</span>
+            <Badge variant={threat.blocked ? "destructive" : "secondary"}>
+              {threat.blocked ? "Blocked" : "Monitoring"}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
+            <Clock className="h-3 w-3" />
+            {new Date(threat.timestamp).toLocaleString()}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
