@@ -3,15 +3,16 @@
 import Link from "next/link"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { UserButton, useAuth } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
-import { Shield, Menu, X } from "lucide-react"
+import { Shield, Menu, X, User, LogOut } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, signOut } = useAuth()
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -48,7 +49,19 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           <ModeToggle />
           {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -63,7 +76,21 @@ export function Navbar() {
 
         <div className="md:hidden flex items-center gap-2">
           <ModeToggle />
-          {isSignedIn && <UserButton afterSignOutUrl="/" />}
+          {isSignedIn && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X /> : <Menu />}
           </Button>

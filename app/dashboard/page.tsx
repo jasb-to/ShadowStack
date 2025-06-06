@@ -1,17 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { ThreatCard } from "@/components/threat-card"
-import { Shield, AlertTriangle, Eye, Activity, RefreshCw } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { Shield, AlertTriangle, Eye, Activity, RefreshCw, Sparkles } from "lucide-react"
 
 interface Threat {
   id: string
   name: string
-  sourceIp: string
+  source_ip: string
   severity: "low" | "medium" | "high" | "critical"
   timestamp: string
   type: string
@@ -26,16 +28,40 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const { isSignedIn } = useAuth()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [aiInsights, setAiInsights] = useState<string>("")
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!isSignedIn) {
+      router.push("/sign-in")
+      return
+    }
+  }, [isSignedIn, router])
 
   const fetchThreats = async () => {
     try {
       const response = await fetch("/api/threats")
       const newData = await response.json()
-      setData(newData)
+
+      // Transform the data to match our interface
+      const transformedThreats = newData.threats.map((threat: any) => ({
+        ...threat,
+        source_ip: threat.sourceIp || threat.source_ip,
+      }))
+
+      setData({
+        ...newData,
+        threats: transformedThreats,
+      })
       setLastUpdate(new Date())
+
+      // Generate AI insights
+      generateAIInsights(transformedThreats)
     } catch (error) {
       console.error("Failed to fetch threats:", error)
     } finally {
@@ -43,14 +69,40 @@ export default function DashboardPage() {
     }
   }
 
+  const generateAIInsights = (threats: Threat[]) => {
+    const criticalCount = threats.filter((t) => t.severity === "critical").length
+    const blockedCount = threats.filter((t) => t.blocked).length
+    const totalCount = threats.length
+
+    let insights = ""
+
+    if (criticalCount > 0) {
+      insights += `🚨 ${criticalCount} critical threats detected requiring immediate attention. `
+    }
+
+    if (blockedCount > 0) {
+      insights += `✅ ${blockedCount} out of ${totalCount} threats have been automatically blocked. `
+    }
+
+    if (totalCount === 0) {
+      insights = "🛡️ No active threats detected. Your systems are secure and all monitoring systems are operational."
+    } else {
+      insights += `📊 Current threat landscape shows ${totalCount} active monitoring events with automated protection systems engaged.`
+    }
+
+    setAiInsights(insights)
+  }
+
   useEffect(() => {
+    if (!isSignedIn) return
+
     fetchThreats()
 
-    // Update every 10 seconds
-    const interval = setInterval(fetchThreats, 10000)
+    // Update every 30 seconds
+    const interval = setInterval(fetchThreats, 30000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [isSignedIn])
 
   const getSeverityStats = () => {
     if (!data) return { critical: 0, high: 0, medium: 0, low: 0 }
@@ -62,6 +114,11 @@ export default function DashboardPage() {
       },
       { critical: 0, high: 0, medium: 0, low: 0 },
     )
+  }
+
+  // Don't render dashboard if not signed in
+  if (!isSignedIn) {
+    return null
   }
 
   const severityStats = getSeverityStats()
@@ -89,7 +146,7 @@ export default function DashboardPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
+            <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Threats</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
@@ -100,7 +157,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Blocked Threats</CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -111,7 +168,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Critical Alerts</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +179,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">System Status</CardTitle>
                 <Eye className="h-4 w-4 text-muted-foreground" />
@@ -137,8 +194,22 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          {/* AI Insights Card */}
+          <Card className="mb-8 shadow-glow border-purple-500/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                <CardTitle>AI Security Insights</CardTitle>
+              </div>
+              <CardDescription>Real-time analysis of your security landscape</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed">{aiInsights || "Analyzing current threat patterns..."}</p>
+            </CardContent>
+          </Card>
+
           {/* Severity Overview */}
-          <Card className="mb-8">
+          <Card className="mb-8 shadow-glow">
             <CardHeader>
               <CardTitle>Threat Severity Distribution</CardTitle>
               <CardDescription>Current threat levels across your infrastructure</CardDescription>
@@ -163,7 +234,7 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Recent Threats</h2>
-              <Badge variant="outline">Live Updates Every 10s</Badge>
+              <Badge variant="outline">Live Updates Every 30s</Badge>
             </div>
 
             {loading ? (
@@ -184,8 +255,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data?.threats.map((threat) => (
-                  <ThreatCard key={threat.id} threat={threat} />
+                {data?.threats.map((threat, index) => (
+                  <ThreatCard key={threat.id} threat={threat} index={index} />
                 ))}
               </div>
             )}

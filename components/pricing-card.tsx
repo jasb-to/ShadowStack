@@ -4,10 +4,26 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@clerk/nextjs"
-import type { TierDetails, SubscriptionTier } from "@/lib/stripe"
-import type { CustomerSubscription } from "@/lib/stripe"
+import { useAuth } from "@/lib/auth-context"
+
+interface TierDetails {
+  name: string
+  priceId?: string
+  price: number
+  currency: string
+  features: string[]
+  maxLimit: number
+}
+
+type SubscriptionTier = "basic" | "pro" | "enterprise" | "none"
+
+interface CustomerSubscription {
+  id: string
+  tier: SubscriptionTier
+  tierDetails: TierDetails
+  status: string
+  currentPeriodEnd: number
+}
 
 interface PricingCardProps {
   tier: SubscriptionTier
@@ -25,7 +41,6 @@ export function PricingCard({
   isYearly = false,
 }: PricingCardProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const { isSignedIn } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -42,35 +57,12 @@ export function PricingCard({
 
     try {
       setIsLoading(true)
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId: tierDetails.priceId,
-          returnUrl: `${window.location.origin}/dashboard`,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        toast({
-          title: "Error",
-          description: data.error,
-          variant: "destructive",
-        })
-        return
-      }
-
-      router.push(data.url)
+      // For demo purposes, just redirect to dashboard
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 1000)
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again later.",
-        variant: "destructive",
-      })
+      console.error("Error:", error)
     } finally {
       setIsLoading(false)
     }
@@ -80,9 +72,9 @@ export function PricingCard({
   const displayPrice = isYearly ? (tierDetails.price * 0.8 * 12).toFixed(2) : tierDetails.price.toFixed(2)
 
   const tierColorClasses = {
-    basic: "border-green-500/20 hover:border-green-500/40 tier-basic-glow",
-    pro: "border-blue-500/20 hover:border-blue-500/40 tier-pro-glow",
-    enterprise: "border-purple-500/20 hover:border-purple-500/40 tier-enterprise-glow",
+    basic: "border-green-500/20 hover:border-green-500/40",
+    pro: "border-blue-500/20 hover:border-blue-500/40",
+    enterprise: "border-purple-500/20 hover:border-purple-500/40",
     none: "",
   }
 
@@ -94,7 +86,7 @@ export function PricingCard({
   }
 
   return (
-    <div className={`rounded-xl border bg-card shadow-lg ${tierColorClasses[tier]}`}>
+    <div className={`rounded-xl border bg-card shadow-lg transition-all hover:shadow-xl ${tierColorClasses[tier]}`}>
       <div className="flex flex-col p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">{tierDetails.name}</h3>

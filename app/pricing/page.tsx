@@ -4,28 +4,76 @@ import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { PricingCard } from "@/components/pricing-card"
-import { TIER_PRODUCTS } from "@/lib/stripe"
-import { getUserSubscription } from "@/lib/subscription"
-import type { CustomerSubscription } from "@/lib/stripe"
+import type { CustomerSubscription } from "@/lib/subscription"
+
+// Define tier products locally
+const TIER_PRODUCTS = {
+  basic: {
+    name: "Starter",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
+    price: 9.99,
+    currency: "$",
+    features: [
+      "500 monthly threat scans",
+      "Basic dashboard access",
+      "Delayed alerts (30 min)",
+      "Email support",
+      "7-day data retention",
+    ],
+    maxLimit: 500,
+  },
+  pro: {
+    name: "Growth",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+    price: 29.99,
+    currency: "$",
+    features: [
+      "5,000 scans/month",
+      "Real-time alerts",
+      "AI threat summaries",
+      "Webhook integration",
+      "Priority email support",
+      "30-day data retention",
+    ],
+    maxLimit: 5000,
+  },
+  enterprise: {
+    name: "Mission Control",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID,
+    price: 99.99,
+    currency: "$",
+    features: [
+      "Unlimited scans",
+      "Priority AI insights",
+      "Team seats (up to 5)",
+      "Custom integrations",
+      "Dedicated account manager",
+      "90-day data retention",
+      "Custom API rate limits",
+    ],
+    maxLimit: Number.POSITIVE_INFINITY,
+  },
+}
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false)
   const [subscription, setSubscription] = useState<CustomerSubscription | null>(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const sub = await getUserSubscription()
-        setSubscription(sub)
-      } catch (error) {
-        console.error("Error fetching subscription:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSubscription()
+    // Set default subscription state for demo purposes
+    setSubscription({
+      id: "",
+      tier: "none",
+      tierDetails: {
+        name: "No Subscription",
+        price: 0,
+        currency: "$",
+        features: [],
+        maxLimit: 0,
+      },
+      status: "inactive",
+      currentPeriodEnd: 0,
+    })
   }, [])
 
   return (
