@@ -9,6 +9,7 @@ import { Navbar } from "@/components/navbar"
 import { ThreatCard } from "@/components/threat-card"
 import { useAuth } from "@/lib/auth-context"
 import { Shield, AlertTriangle, Eye, Activity, RefreshCw, Sparkles } from "lucide-react"
+import { Footer } from "@/components/footer"
 
 interface Threat {
   id: string
@@ -263,6 +264,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

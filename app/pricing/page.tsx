@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { PricingCard } from "@/components/pricing-card"
 import type { CustomerSubscription } from "@/lib/subscription"
+import { Footer } from "@/components/footer"
 
 // Define tier products locally
 const TIER_PRODUCTS = {
@@ -168,6 +169,7 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
