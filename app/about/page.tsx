@@ -1,7 +1,7 @@
 import Image from "next/image"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Shield, Users, Award, Zap } from "lucide-react"
+import { Shield, Users, Award, Zap, CheckCircle, AlertTriangle, Eye } from "lucide-react"
 
 export default function AboutPage() {
   return (
@@ -43,6 +43,93 @@ export default function AboutPage() {
             <div className="relative h-80 rounded-lg overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-lg" />
               <Image src="/placeholder.svg?height=600&width=800" alt="ShadowStack team" fill className="object-cover" />
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="mb-24">
+            <h2 className="text-3xl font-bold mb-12 text-center">How ShadowStack Protects Your Business</h2>
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">1. Monitor Public Channels</h3>
+                <p className="text-muted-foreground">
+                  We continuously scan public Telegram channels, forums, and dark web sources for mentions of your
+                  sensitive assets like wallet addresses, domains, and email addresses.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">2. Instant Threat Detection</h3>
+                <p className="text-muted-foreground">
+                  Our AI-powered system instantly identifies when your assets are mentioned in breach chatter,
+                  ransomware discussions, or other malicious activities.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Eye className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">3. Real-Time Alerts</h3>
+                <p className="text-muted-foreground">
+                  Get immediate email notifications and dashboard alerts the moment your assets are compromised, giving
+                  you precious time to respond before damage occurs.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-muted/30 rounded-lg p-8">
+              <h3 className="text-2xl font-bold mb-6 text-center">Getting Started is Simple</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg font-semibold mb-4">What You Need to Provide:</h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Cryptocurrency wallet addresses you want to monitor</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Domain names and subdomains</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Email addresses and company identifiers</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>API endpoints and server identifiers</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold mb-4">How It Helps Your Business:</h4>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Early warning of potential breaches before they impact customers</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Protect your reputation by responding to threats quickly</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Reduce incident response time from days to minutes</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <span>Comply with data breach notification requirements</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -95,30 +182,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Leadership Team */}
-          <div className="mb-24">
-            <h2 className="text-3xl font-bold mb-12 text-center">Our Leadership Team</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="text-center">
-                  <div className="relative w-40 h-40 mx-auto mb-4 rounded-full overflow-hidden">
-                    <Image
-                      src={`/placeholder.svg?height=200&width=200&text=Team${i}`}
-                      alt={`Team member ${i}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold">Jane Smith</h3>
-                  <p className="text-primary">Chief Executive Officer</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Former Head of Security at TechCorp with 15+ years of experience in cybersecurity.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Stats */}
           <div className="bg-muted/30 rounded-lg p-8 mb-24">
             <div className="text-center mb-12">
@@ -147,25 +210,27 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Careers */}
+          {/* Contact CTA */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">Join Our Team</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Protect Your Business?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-              We're always looking for talented individuals who are passionate about cybersecurity and want to make a
-              difference.
+              Join hundreds of businesses already using ShadowStack to stay ahead of cyber threats. Get started with our
+              free trial today.
             </p>
-            <a href="/careers" className="inline-flex items-center text-primary hover:underline">
-              View open positions
-              <svg
-                className="ml-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/pricing"
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </a>
+                Start Free Trial
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center px-6 py-3 border border-border text-base font-medium rounded-md text-foreground bg-background hover:bg-muted transition-colors"
+              >
+                Contact Sales
+              </a>
+            </div>
           </div>
         </div>
       </div>

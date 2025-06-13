@@ -12,13 +12,27 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { isSignedIn, signOut } = useAuth()
+  const { isSignedIn, signOut, loading } = useAuth()
 
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Dashboard", href: "/dashboard" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
   ]
+
+  // Add Dashboard to navigation if user is signed in
+  if (isSignedIn) {
+    navigation.splice(2, 0, { name: "Dashboard", href: "/dashboard" })
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -48,7 +62,9 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-4">
           <ModeToggle />
-          {isSignedIn ? (
+          {loading ? (
+            <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
+          ) : isSignedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full">
@@ -56,7 +72,7 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>
                 </DropdownMenuItem>
@@ -76,7 +92,7 @@ export function Navbar() {
 
         <div className="md:hidden flex items-center gap-2">
           <ModeToggle />
-          {isSignedIn && (
+          {!loading && isSignedIn && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full">
@@ -84,7 +100,7 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>
                 </DropdownMenuItem>
@@ -114,7 +130,7 @@ export function Navbar() {
                 </Link>
               ))}
             </nav>
-            {!isSignedIn && (
+            {!loading && !isSignedIn && (
               <div className="grid gap-2">
                 <Button variant="outline" asChild>
                   <Link href="/sign-in">Sign In</Link>

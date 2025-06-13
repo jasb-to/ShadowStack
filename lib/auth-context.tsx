@@ -2,37 +2,89 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
 
 interface AuthContextType {
+  user: User | null
   isSignedIn: boolean
-  signIn: () => void
-  signOut: () => void
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string, company?: string) => Promise<void>
+  signOut: () => Promise<void>
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isSignedIn, setIsSignedIn] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Check local storage on initial load
   useEffect(() => {
-    const storedAuth = localStorage.getItem("demo-auth")
-    if (storedAuth) {
-      setIsSignedIn(JSON.parse(storedAuth))
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error("Error getting session:", error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    getInitialSession()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = () => {
-    setIsSignedIn(true)
-    localStorage.setItem("demo-auth", JSON.stringify(true))
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
   }
 
-  const signOut = () => {
-    setIsSignedIn(false)
-    localStorage.setItem("demo-auth", JSON.stringify(false))
+  const signUp = async (email: string, password: string, fullName: string, company?: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          company_name: company || null,
+        },
+      },
+    })
+    if (error) throw error
   }
 
-  return <AuthContext.Provider value={{ isSignedIn, signIn, signOut }}>{children}</AuthContext.Provider>
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+  }
+
+  const value = {
+    user,
+    isSignedIn: !!user,
+    signIn,
+    signUp,
+    signOut,
+    loading,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

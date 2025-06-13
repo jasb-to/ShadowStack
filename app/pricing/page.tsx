@@ -13,7 +13,7 @@ const TIER_PRODUCTS = {
     name: "Starter",
     priceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
     price: 9.99,
-    currency: "$",
+    currency: "£",
     features: [
       "500 monthly threat scans",
       "Basic dashboard access",
@@ -27,7 +27,7 @@ const TIER_PRODUCTS = {
     name: "Growth",
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
     price: 29.99,
-    currency: "$",
+    currency: "£",
     features: [
       "5,000 scans/month",
       "Real-time alerts",
@@ -42,7 +42,7 @@ const TIER_PRODUCTS = {
     name: "Mission Control",
     priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID,
     price: 99.99,
-    currency: "$",
+    currency: "£",
     features: [
       "Unlimited scans",
       "Priority AI insights",

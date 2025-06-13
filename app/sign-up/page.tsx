@@ -11,21 +11,49 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth-context"
+import { toast } from "@/hooks/use-toast"
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { signIn } = useAuth()
+  const { signUp } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+    company: "",
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate account creation
-    setTimeout(() => {
-      signIn()
-      router.push("/dashboard")
-    }, 1000)
+    try {
+      await signUp(formData.email, formData.password, formData.fullName, formData.company)
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      })
+
+      // Redirect to sign-in page
+      router.push("/sign-in?message=Check your email to verify your account")
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -41,20 +69,40 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" required />
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  placeholder="John Doe"
+                  onChange={handleChange}
+                  value={formData.fullName}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  onChange={handleChange}
+                  value={formData.email}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  onChange={handleChange}
+                  value={formData.password}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company">Company (Optional)</Label>
-                <Input id="company" placeholder="Your Company" />
+                <Input id="company" placeholder="Your Company" onChange={handleChange} value={formData.company} />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">

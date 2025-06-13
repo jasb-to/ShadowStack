@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Phone, MapPin, MessageSquare } from "lucide-react"
+import { Mail, MapPin, MessageSquare } from "lucide-react"
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -61,31 +61,14 @@ export default function ContactPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start space-x-4">
-                    <Phone className="h-6 w-6 text-primary mt-1" />
-                    <div>
-                      <h3 className="font-medium">Call Us</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Mon-Fri from 9am to 5pm EST</p>
-                      <a href="tel:+1-555-123-4567" className="text-primary hover:underline mt-2 block">
-                        +1 (555) 123-4567
-                      </a>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start space-x-4">
                     <MapPin className="h-6 w-6 text-primary mt-1" />
                     <div>
                       <h3 className="font-medium">Visit Us</h3>
                       <p className="text-sm text-muted-foreground mt-1">Our headquarters</p>
                       <address className="not-italic text-sm mt-2">
-                        123 Security Avenue
+                        Birmingham City Centre
                         <br />
-                        Suite 400
-                        <br />
-                        San Francisco, CA 94103
+                        United Kingdom
                       </address>
                     </div>
                   </div>

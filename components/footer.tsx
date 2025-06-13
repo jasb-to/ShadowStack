@@ -51,11 +51,6 @@ export function Footer() {
                   Contact
                 </Link>
               </li>
-              <li>
-                <Link href="/careers" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Careers
-                </Link>
-              </li>
             </ul>
           </div>
 
