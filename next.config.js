@@ -12,6 +12,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ["ufmysxronjaohovgoecc.supabase.co"],
     unoptimized: true,
   },
   webpack: (config, { isServer }) => {

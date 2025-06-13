@@ -36,16 +36,18 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
+      console.log("Signing up with:", formData.email)
       await signUp(formData.email, formData.password, formData.fullName, formData.company)
 
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description: "You've been signed up successfully.",
       })
 
-      // Redirect to sign-in page
-      router.push("/sign-in?message=Check your email to verify your account")
+      // Redirect to dashboard
+      router.push("/dashboard")
     } catch (error: any) {
+      console.error("Sign up error:", error)
       toast({
         title: "Error",
         description: error.message || "Failed to create account",

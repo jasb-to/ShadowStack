@@ -6,26 +6,31 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
+  console.error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
 }
 
 if (!supabaseAnonKey) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
+  console.error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
 }
 
 // Client-side Supabase client (uses anon key + user JWT)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
+export const supabase = createClient(
+  supabaseUrl || "https://ufmysxronjaohovgoecc.supabase.co",
+  supabaseAnonKey ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbXlzeHJvbmphb2hvdmdvZWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMDI0NzcsImV4cCI6MjAzMzg3ODQ3N30.Nh-hJRYGnQgxvdUEWwNgJN-kxTKyZXP5aQvmRsF-8QE",
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
   },
-})
+)
 
 // Server-side Supabase client with admin privileges (uses service role key)
 // Only create this if the service role key is available (server-side only)
 export const supabaseAdmin = supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey, {
+  ? createClient(supabaseUrl || "https://ufmysxronjaohovgoecc.supabase.co", supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

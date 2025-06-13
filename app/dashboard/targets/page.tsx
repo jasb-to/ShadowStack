@@ -61,6 +61,7 @@ export default function MonitoringTargetsPage() {
   const [loading, setLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [editingTarget, setEditingTarget] = useState<MonitoringTarget | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -80,18 +81,25 @@ export default function MonitoringTargetsPage() {
 
   const fetchTargets = async () => {
     try {
+      setError(null)
       const { data, error } = await supabase
         .from("monitoring_targets")
         .select("*")
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching targets:", error)
+        setError(`Failed to fetch targets: ${error.message}`)
+        throw error
+      }
+
       setTargets(data || [])
     } catch (error: any) {
+      console.error("Error in fetchTargets:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch monitoring targets",
+        description: "Failed to fetch monitoring targets. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -104,6 +112,8 @@ export default function MonitoringTargetsPage() {
     if (!user?.id) return
 
     setIsAdding(true)
+    setError(null)
+
     try {
       const targetData = {
         user_id: user.id,
@@ -114,6 +124,8 @@ export default function MonitoringTargetsPage() {
         is_active: true,
       }
 
+      console.log("Submitting target data:", targetData)
+
       if (editingTarget) {
         const { error } = await supabase
           .from("monitoring_targets")
@@ -121,12 +133,22 @@ export default function MonitoringTargetsPage() {
           .eq("id", editingTarget.id)
           .eq("user_id", user.id)
 
-        if (error) throw error
+        if (error) {
+          console.error("Error updating target:", error)
+          setError(`Failed to update target: ${error.message}`)
+          throw error
+        }
+
         toast({ title: "Success", description: "Target updated successfully" })
       } else {
         const { error } = await supabase.from("monitoring_targets").insert([targetData])
 
-        if (error) throw error
+        if (error) {
+          console.error("Error adding target:", error)
+          setError(`Failed to add target: ${error.message}`)
+          throw error
+        }
+
         toast({ title: "Success", description: "Target added successfully" })
       }
 
@@ -140,9 +162,10 @@ export default function MonitoringTargetsPage() {
       setEditingTarget(null)
       fetchTargets()
     } catch (error: any) {
+      console.error("Error in handleSubmit:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to save target",
+        description: error.message || "Failed to save target. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -154,15 +177,22 @@ export default function MonitoringTargetsPage() {
     if (!confirm("Are you sure you want to delete this monitoring target?")) return
 
     try {
+      setError(null)
       const { error } = await supabase.from("monitoring_targets").delete().eq("id", targetId).eq("user_id", user?.id)
 
-      if (error) throw error
+      if (error) {
+        console.error("Error deleting target:", error)
+        setError(`Failed to delete target: ${error.message}`)
+        throw error
+      }
+
       toast({ title: "Success", description: "Target deleted successfully" })
       fetchTargets()
     } catch (error: any) {
+      console.error("Error in handleDelete:", error)
       toast({
         title: "Error",
-        description: "Failed to delete target",
+        description: "Failed to delete target. Please try again.",
         variant: "destructive",
       })
     }
@@ -170,22 +200,29 @@ export default function MonitoringTargetsPage() {
 
   const handleToggleActive = async (target: MonitoringTarget) => {
     try {
+      setError(null)
       const { error } = await supabase
         .from("monitoring_targets")
         .update({ is_active: !target.is_active })
         .eq("id", target.id)
         .eq("user_id", user?.id)
 
-      if (error) throw error
+      if (error) {
+        console.error("Error toggling target:", error)
+        setError(`Failed to update target status: ${error.message}`)
+        throw error
+      }
+
       toast({
         title: "Success",
         description: `Target ${!target.is_active ? "activated" : "deactivated"}`,
       })
       fetchTargets()
     } catch (error: any) {
+      console.error("Error in handleToggleActive:", error)
       toast({
         title: "Error",
-        description: "Failed to update target status",
+        description: "Failed to update target status. Please try again.",
         variant: "destructive",
       })
     }
@@ -199,6 +236,9 @@ export default function MonitoringTargetsPage() {
       target_name: target.target_name || "",
       target_description: target.target_description || "",
     })
+
+    // Switch to the add tab
+    document.querySelector('[value="add"]')?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
   }
 
   const getTargetIcon = (type: string) => {
@@ -238,6 +278,13 @@ export default function MonitoringTargetsPage() {
             <h1 className="text-3xl font-bold mb-2">Monitoring Targets</h1>
             <p className="text-muted-foreground">Add and manage the assets you want to monitor for security threats</p>
           </div>
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
+              <h3 className="font-semibold">Error</h3>
+              <p>{error}</p>
+            </div>
+          )}
 
           <Tabs defaultValue="targets" className="space-y-6">
             <TabsList>
@@ -369,7 +416,13 @@ export default function MonitoringTargetsPage() {
                     <p className="text-muted-foreground mb-6">
                       Start by adding your first asset to monitor for security threats
                     </p>
-                    <Button onClick={() => document.querySelector('[value="add"]')?.click()}>
+                    <Button
+                      onClick={() =>
+                        document
+                          .querySelector('[value="add"]')
+                          ?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+                      }
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Target
                     </Button>

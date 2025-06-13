@@ -38,6 +38,7 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
+      console.log("Signing in with:", formData.email)
       await signIn(formData.email, formData.password)
 
       toast({
@@ -47,9 +48,32 @@ export default function SignInPage() {
 
       router.push("/dashboard")
     } catch (error: any) {
+      console.error("Sign in error:", error)
       toast({
         title: "Error",
         description: error.message || "Failed to sign in",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Demo login function
+  const handleDemoLogin = async () => {
+    setIsLoading(true)
+    try {
+      await signIn("demo@shadowstack.com", "demo12345")
+      toast({
+        title: "Welcome to the demo!",
+        description: "You've been signed in with the demo account.",
+      })
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error("Demo login error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to sign in with demo account",
         variant: "destructive",
       })
     } finally {
@@ -110,6 +134,19 @@ export default function SignInPage() {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
+
+              <div className="mt-4 text-center">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleDemoLogin}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  Try Demo Account
+                </Button>
+              </div>
+
               <p className="mt-4 text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link href="/sign-up" className="text-primary hover:underline">
