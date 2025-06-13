@@ -5,9 +5,15 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
-import { Shield, Menu, X, User, LogOut } from "lucide-react"
+import { Shield, Menu, X, User, LogOut, Target, AlertTriangle, Settings } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -21,10 +27,17 @@ export function Navbar() {
     { name: "Contact", href: "/contact" },
   ]
 
-  // Add Dashboard to navigation if user is signed in
+  // Add Dashboard navigation if user is signed in
   if (isSignedIn) {
     navigation.splice(2, 0, { name: "Dashboard", href: "/dashboard" })
   }
+
+  const dashboardNavigation = [
+    { name: "Overview", href: "/dashboard", icon: Shield },
+    { name: "Targets", href: "/dashboard/targets", icon: Target },
+    { name: "Alerts", href: "/dashboard/alerts", icon: AlertTriangle },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  ]
 
   const handleSignOut = async () => {
     try {
@@ -71,7 +84,23 @@ export function Navbar() {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
+                {pathname.startsWith("/dashboard") && (
+                  <>
+                    {dashboardNavigation.map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link href={item.href} className="flex items-center">
+                            <Icon className="mr-2 h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>
@@ -100,6 +129,22 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {pathname.startsWith("/dashboard") && (
+                  <>
+                    {dashboardNavigation.map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <DropdownMenuItem key={item.name} asChild>
+                          <Link href={item.href} className="flex items-center">
+                            <Icon className="mr-2 h-4 w-4" />
+                            <span>{item.name}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>

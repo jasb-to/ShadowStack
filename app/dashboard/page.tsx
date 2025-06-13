@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { ThreatCard } from "@/components/threat-card"
 import { useAuth } from "@/lib/auth-context"
-import { Shield, AlertTriangle, Eye, Activity, RefreshCw, Sparkles } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { Shield, AlertTriangle, Eye, Activity, RefreshCw, Sparkles, Plus, Target } from "lucide-react"
 import { Footer } from "@/components/footer"
 
 interface Threat {
@@ -28,10 +30,25 @@ interface DashboardData {
   blockedThreats: number
 }
 
+interface DashboardStats {
+  totalTargets: number
+  activeTargets: number
+  totalAlerts: number
+  unreadAlerts: number
+  criticalAlerts: number
+}
+
 export default function DashboardPage() {
   const router = useRouter()
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, user } = useAuth()
   const [data, setData] = useState<DashboardData | null>(null)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalTargets: 0,
+    activeTargets: 0,
+    totalAlerts: 0,
+    unreadAlerts: 0,
+    criticalAlerts: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
   const [aiInsights, setAiInsights] = useState<string>("")
@@ -44,51 +61,74 @@ export default function DashboardPage() {
     }
   }, [isSignedIn, router])
 
-  const fetchThreats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await fetch("/api/threats")
-      const newData = await response.json()
+      // Fetch monitoring targets stats
+      const { data: targets, error: targetsError } = await supabase
+        .from("monitoring_targets")
+        .select("id, is_active")
+        .eq("user_id", user?.id)
 
-      // Transform the data to match our interface
-      const transformedThreats = newData.threats.map((threat: any) => ({
+      if (targetsError) throw targetsError
+
+      // Fetch alerts stats
+      const { data: alerts, error: alertsError } = await supabase
+        .from("alerts")
+        .select("id, severity, is_read")
+        .eq("user_id", user?.id)
+
+      if (alertsError) throw alertsError
+
+      // Calculate stats
+      const newStats = {
+        totalTargets: targets?.length || 0,
+        activeTargets: targets?.filter((t) => t.is_active).length || 0,
+        totalAlerts: alerts?.length || 0,
+        unreadAlerts: alerts?.filter((a) => !a.is_read).length || 0,
+        criticalAlerts: alerts?.filter((a) => a.severity === "critical").length || 0,
+      }
+
+      setStats(newStats)
+
+      // Fetch simulated threat data
+      const response = await fetch("/api/threats")
+      const threatData = await response.json()
+
+      const transformedThreats = threatData.threats.map((threat: any) => ({
         ...threat,
         source_ip: threat.sourceIp || threat.source_ip,
       }))
 
       setData({
-        ...newData,
+        ...threatData,
         threats: transformedThreats,
       })
       setLastUpdate(new Date())
 
       // Generate AI insights
-      generateAIInsights(transformedThreats)
+      generateAIInsights(transformedThreats, newStats)
     } catch (error) {
-      console.error("Failed to fetch threats:", error)
+      console.error("Failed to fetch dashboard data:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const generateAIInsights = (threats: Threat[]) => {
-    const criticalCount = threats.filter((t) => t.severity === "critical").length
-    const blockedCount = threats.filter((t) => t.blocked).length
-    const totalCount = threats.length
-
+  const generateAIInsights = (threats: Threat[], dashboardStats: DashboardStats) => {
     let insights = ""
 
-    if (criticalCount > 0) {
-      insights += `🚨 ${criticalCount} critical threats detected requiring immediate attention. `
-    }
-
-    if (blockedCount > 0) {
-      insights += `✅ ${blockedCount} out of ${totalCount} threats have been automatically blocked. `
-    }
-
-    if (totalCount === 0) {
-      insights = "🛡️ No active threats detected. Your systems are secure and all monitoring systems are operational."
+    if (dashboardStats.totalTargets === 0) {
+      insights =
+        "🎯 Get started by adding your first monitoring target. Add wallet addresses, domains, or API endpoints to begin threat detection."
+    } else if (dashboardStats.criticalAlerts > 0) {
+      insights = `🚨 ${dashboardStats.criticalAlerts} critical alerts require immediate attention. Review your alerts page for detailed information.`
+    } else if (dashboardStats.unreadAlerts > 0) {
+      insights = `📬 You have ${dashboardStats.unreadAlerts} unread alerts. ${dashboardStats.activeTargets} targets are actively monitored.`
+    } else if (threats.length === 0) {
+      insights = `🛡️ All systems secure! ${dashboardStats.activeTargets} targets are being monitored with no active threats detected.`
     } else {
-      insights += `📊 Current threat landscape shows ${totalCount} active monitoring events with automated protection systems engaged.`
+      const blockedCount = threats.filter((t) => t.blocked).length
+      insights = `📊 Monitoring ${dashboardStats.activeTargets} targets. ${blockedCount} out of ${threats.length} recent threats have been automatically blocked.`
     }
 
     setAiInsights(insights)
@@ -97,13 +137,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isSignedIn) return
 
-    fetchThreats()
+    fetchDashboardData()
 
     // Update every 30 seconds
-    const interval = setInterval(fetchThreats, 30000)
+    const interval = setInterval(fetchDashboardData, 30000)
 
     return () => clearInterval(interval)
-  }, [isSignedIn])
+  }, [isSignedIn, user])
 
   const getSeverityStats = () => {
     if (!data) return { critical: 0, high: 0, medium: 0, low: 0 }
@@ -138,34 +178,58 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-4 mt-4 sm:mt-0">
               <div className="text-sm text-muted-foreground">Last updated: {lastUpdate.toLocaleTimeString()}</div>
-              <Button variant="outline" size="sm" onClick={fetchThreats} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={fetchDashboardData} disabled={loading}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                 Refresh
               </Button>
             </div>
           </div>
 
+          {/* Quick Actions */}
+          {stats.totalTargets === 0 && (
+            <Card className="mb-8 border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Get Started</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add your first monitoring target to start detecting security threats
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link href="/dashboard/targets">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Target
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Threats</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Monitoring Targets</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data?.totalThreats || 0}</div>
-                <p className="text-xs text-muted-foreground">Active monitoring</p>
+                <div className="text-2xl font-bold">{stats.activeTargets}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.totalTargets} total ({stats.activeTargets} active)
+                </p>
               </CardContent>
             </Card>
 
             <Card className="shadow-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Blocked Threats</CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-500">{data?.blockedThreats || 0}</div>
-                <p className="text-xs text-muted-foreground">Automatically blocked</p>
+                <div className="text-2xl font-bold">{stats.totalAlerts}</div>
+                <p className="text-xs text-muted-foreground">{stats.unreadAlerts} unread</p>
               </CardContent>
             </Card>
 
@@ -175,7 +239,7 @@ export default function DashboardPage() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-500">{severityStats.critical}</div>
+                <div className="text-2xl font-bold text-red-500">{stats.criticalAlerts}</div>
                 <p className="text-xs text-muted-foreground">Requires attention</p>
               </CardContent>
             </Card>
@@ -209,33 +273,101 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Severity Overview */}
-          <Card className="mb-8 shadow-glow">
-            <CardHeader>
-              <CardTitle>Threat Severity Distribution</CardTitle>
-              <CardDescription>Current threat levels across your infrastructure</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
-                  Critical: {severityStats.critical}
-                </Badge>
-                <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">
-                  High: {severityStats.high}
-                </Badge>
-                <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                  Medium: {severityStats.medium}
-                </Badge>
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Low: {severityStats.low}</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Quick Navigation */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/dashboard/targets")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  Monitoring Targets
+                </CardTitle>
+                <CardDescription>Manage your monitored assets and add new targets</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold">{stats.totalTargets}</span>
+                  <Button variant="ghost" size="sm">
+                    Manage →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Threats Grid */}
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/dashboard/alerts")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-primary" />
+                  Security Alerts
+                </CardTitle>
+                <CardDescription>View and manage your security alerts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold">{stats.unreadAlerts}</span>
+                  <Button variant="ghost" size="sm">
+                    View →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push("/dashboard/settings")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Settings
+                </CardTitle>
+                <CardDescription>Configure notifications and integrations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Configure</span>
+                  <Button variant="ghost" size="sm">
+                    Settings →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Severity Overview */}
+          {data && data.threats.length > 0 && (
+            <Card className="mb-8 shadow-glow">
+              <CardHeader>
+                <CardTitle>Recent Threat Activity</CardTitle>
+                <CardDescription>Latest security events and threat levels</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
+                    Critical: {severityStats.critical}
+                  </Badge>
+                  <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">
+                    High: {severityStats.high}
+                  </Badge>
+                  <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                    Medium: {severityStats.medium}
+                  </Badge>
+                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Low: {severityStats.low}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recent Threats */}
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Recent Threats</h2>
-              <Badge variant="outline">Live Updates Every 30s</Badge>
+              <h2 className="text-2xl font-bold">Recent Threat Simulations</h2>
+              <Badge variant="outline">Demo Data - Live Updates Every 30s</Badge>
             </div>
 
             {loading ? (
