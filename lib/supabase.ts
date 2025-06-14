@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js"
 // Validate environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl) {
   console.error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
@@ -27,16 +26,21 @@ export const supabase = createClient(
   },
 )
 
-// Server-side Supabase client with admin privileges (uses service role key)
-// Only create this if the service role key is available (server-side only)
-export const supabaseAdmin = supabaseServiceKey
-  ? createClient(supabaseUrl || "https://ufmysxronjaohovgoecc.supabase.co", supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  : null
+// Server-side Supabase client - ONLY for server-side API routes
+export function createServerClient() {
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseServiceKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for server operations")
+  }
+
+  return createClient(supabaseUrl || "https://ufmysxronjaohovgoecc.supabase.co", supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
 
 // Types
 export interface UserProfile {
@@ -48,6 +52,8 @@ export interface UserProfile {
   subscription_status: "active" | "inactive" | "past_due" | "canceled"
   subscription_id?: string
   current_period_end?: string
+  role?: "user" | "admin"
+  permissions?: string[]
   created_at: string
 }
 

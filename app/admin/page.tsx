@@ -1,177 +1,86 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
-import { Users, CreditCard, Settings, Activity, TrendingUp, Shield, Database, Bell, TestTube } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-
-interface AdminStats {
-  totalUsers: number
-  activeUsers: number
-  paidUsers: number
-  freeUsers: number
-  totalTargets: number
-  totalAlerts: number
-  monthlyRevenue: number
-  systemHealth: "healthy" | "warning" | "critical"
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Users, Shield, Database, Settings, AlertTriangle, CheckCircle } from "lucide-react"
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats>({
+  const { user } = useAuth()
+  const [stats, setStats] = useState({
     totalUsers: 0,
-    activeUsers: 0,
-    paidUsers: 0,
-    freeUsers: 0,
-    totalTargets: 0,
+    activeSubscriptions: 0,
     totalAlerts: 0,
-    monthlyRevenue: 0,
-    systemHealth: "healthy",
+    systemStatus: "operational",
   })
-  const [paywallEnabled, setPaywallEnabled] = useState(true)
-  const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
+  const [setupNeeded, setSetupNeeded] = useState(false)
 
   useEffect(() => {
-    fetchAdminStats()
-    fetchSystemConfig()
+    const loadStats = async () => {
+      try {
+        // Try to load basic stats
+        const { data: users, error: usersError } = await supabase
+          .from("user_profiles")
+          .select("id, subscription_status")
+
+        if (usersError) {
+          console.error("Error loading users:", usersError)
+          setSetupNeeded(true)
+        } else {
+          setStats({
+            totalUsers: users?.length || 0,
+            activeSubscriptions: users?.filter((u) => u.subscription_status === "active").length || 0,
+            totalAlerts: 0,
+            systemStatus: "operational",
+          })
+        }
+      } catch (error) {
+        console.error("Error loading admin stats:", error)
+        setSetupNeeded(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadStats()
   }, [])
 
-  const fetchAdminStats = async () => {
+  const setupAdminAccount = async () => {
     try {
-      // Fetch user stats
-      const { data: users, error: usersError } = await supabase
-        .from("user_profiles")
-        .select("subscription_tier, subscription_status, last_login")
-
-      if (usersError) throw usersError
-
-      // Fetch targets count
-      const { count: targetsCount, error: targetsError } = await supabase
-        .from("monitoring_targets")
-        .select("*", { count: "exact", head: true })
-
-      if (targetsError) throw targetsError
-
-      // Fetch alerts count
-      const { count: alertsCount, error: alertsError } = await supabase
-        .from("alerts")
-        .select("*", { count: "exact", head: true })
-
-      if (alertsError) throw alertsError
-
-      // Calculate stats
-      const totalUsers = users?.length || 0
-      const activeUsers =
-        users?.filter((u) => u.last_login && new Date(u.last_login) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
-          .length || 0
-      const paidUsers =
-        users?.filter((u) => u.subscription_tier !== "none" && u.subscription_status === "active").length || 0
-
-      setStats({
-        totalUsers,
-        activeUsers,
-        paidUsers,
-        freeUsers: totalUsers - paidUsers,
-        totalTargets: targetsCount || 0,
-        totalAlerts: alertsCount || 0,
-        monthlyRevenue: paidUsers * 29, // Simplified calculation
-        systemHealth: "healthy",
+      const response = await fetch("/api/admin/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "jaspalbilkhu@gmail.com",
+          password: "ShadowStack2024!Admin#Secure",
+        }),
       })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert("Admin account setup complete! Please refresh the page.")
+        window.location.reload()
+      } else {
+        alert("Setup failed: " + result.error)
+      }
     } catch (error) {
-      console.error("Error fetching admin stats:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch admin statistics",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+      console.error("Setup error:", error)
+      alert("Setup failed. Check console for details.")
     }
-  }
-
-  const fetchSystemConfig = async () => {
-    try {
-      const { data: configs, error } = await supabase
-        .from("system_config")
-        .select("config_key, config_value")
-        .in("config_key", ["paywall_enabled", "maintenance_mode"])
-
-      if (error) throw error
-
-      configs?.forEach((config) => {
-        if (config.config_key === "paywall_enabled") {
-          setPaywallEnabled(config.config_value === "true")
-        }
-        if (config.config_key === "maintenance_mode") {
-          setMaintenanceMode(config.config_value === "true")
-        }
-      })
-    } catch (error) {
-      console.error("Error fetching system config:", error)
-    }
-  }
-
-  const updateSystemConfig = async (key: string, value: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("system_config")
-        .update({
-          config_value: value.toString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("config_key", key)
-
-      if (error) throw error
-
-      // Log admin action
-      await supabase.rpc("log_admin_action", {
-        p_action: "update_system_config",
-        p_resource_type: "system_config",
-        p_resource_id: key,
-        p_details: { old_value: !value, new_value: value },
-      })
-
-      toast({
-        title: "Success",
-        description: `${key.replace("_", " ")} updated successfully`,
-      })
-    } catch (error) {
-      console.error("Error updating system config:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update system configuration",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handlePaywallToggle = (enabled: boolean) => {
-    setPaywallEnabled(enabled)
-    updateSystemConfig("paywall_enabled", enabled)
-  }
-
-  const handleMaintenanceToggle = (enabled: boolean) => {
-    setMaintenanceMode(enabled)
-    updateSystemConfig("maintenance_mode", enabled)
   }
 
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-muted rounded w-1/3"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-32 bg-muted rounded"></div>
-              ))}
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading admin dashboard...</p>
           </div>
         </div>
       </div>
@@ -179,254 +88,123 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">System overview and management controls</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Badge variant={stats.systemHealth === "healthy" ? "default" : "destructive"}>
-              {stats.systemHealth.toUpperCase()}
-            </Badge>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, {user?.email}</p>
         </div>
+        <Badge variant={setupNeeded ? "destructive" : "default"}>
+          {setupNeeded ? "Setup Required" : "System Operational"}
+        </Badge>
+      </div>
 
-        {/* System Controls */}
-        <Card className="mb-8 border-orange-500/20 bg-orange-500/5">
+      {setupNeeded && (
+        <Card className="mb-6 border-yellow-200 bg-yellow-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TestTube className="h-5 w-5" />
-              System Controls
+            <CardTitle className="flex items-center gap-2 text-yellow-800">
+              <AlertTriangle className="h-5 w-5" />
+              Database Setup Required
             </CardTitle>
-            <CardDescription>Toggle system-wide features and test modes</CardDescription>
+            <CardDescription className="text-yellow-700">
+              The admin system needs to be set up. Click the button below to initialize your admin account and database
+              tables.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Paywall</h3>
-                  <p className="text-sm text-muted-foreground">Enable/disable payment requirements</p>
-                </div>
-                <Switch checked={paywallEnabled} onCheckedChange={handlePaywallToggle} />
-              </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Maintenance Mode</h3>
-                  <p className="text-sm text-muted-foreground">Put system in maintenance mode</p>
-                </div>
-                <Switch checked={maintenanceMode} onCheckedChange={handleMaintenanceToggle} />
-              </div>
-            </div>
+            <Button onClick={setupAdminAccount} className="bg-yellow-600 hover:bg-yellow-700">
+              Setup Admin Account
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">Registered accounts</p>
           </CardContent>
         </Card>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">{stats.activeUsers} active this month</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid Subscribers</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.paidUsers}</div>
-              <p className="text-xs text-muted-foreground">{stats.freeUsers} free users</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">£{stats.monthlyRevenue}</div>
-              <p className="text-xs text-muted-foreground">Estimated monthly recurring</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Health</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-500">Operational</span>
-              </div>
-              <p className="text-xs text-muted-foreground">All systems running</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/users">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  User Management
-                </CardTitle>
-                <CardDescription>Manage users, subscriptions, and permissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold">{stats.totalUsers}</span>
-                  <Button variant="ghost" size="sm">
-                    Manage →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/analytics">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Analytics
-                </CardTitle>
-                <CardDescription>View detailed system analytics and reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">View Reports</span>
-                  <Button variant="ghost" size="sm">
-                    Analytics →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/system">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-primary" />
-                  System Settings
-                </CardTitle>
-                <CardDescription>Configure system-wide settings and features</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Configure</span>
-                  <Button variant="ghost" size="sm">
-                    Settings →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/security">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Security & Audit
-                </CardTitle>
-                <CardDescription>View audit logs and security settings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">View Logs</span>
-                  <Button variant="ghost" size="sm">
-                    Security →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/database">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-primary" />
-                  Database Management
-                </CardTitle>
-                <CardDescription>Backup, restore, and manage database</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Manage DB</span>
-                  <Button variant="ghost" size="sm">
-                    Database →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" asChild>
-            <Link href="/admin/notifications">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-primary" />
-                  Notifications
-                </CardTitle>
-                <CardDescription>Manage system notifications and alerts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Manage</span>
-                  <Button variant="ghost" size="sm">
-                    Notifications →
-                  </Button>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <Card className="shadow-glow">
-          <CardHeader>
-            <CardTitle>Recent System Activity</CardTitle>
-            <CardDescription>Latest administrative actions and system events</CardDescription>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-3 border rounded-lg">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">System configuration updated</p>
-                  <p className="text-xs text-muted-foreground">Paywall settings modified</p>
-                </div>
-                <span className="text-xs text-muted-foreground">2 minutes ago</span>
+            <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+            <p className="text-xs text-muted-foreground">Paying customers</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">System Status</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Online</div>
+            <p className="text-xs text-muted-foreground">All systems operational</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Database</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Connected</div>
+            <p className="text-xs text-muted-foreground">Supabase active</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button className="w-full justify-start" variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              Manage Users
+            </Button>
+            <Button className="w-full justify-start" variant="outline">
+              <Settings className="mr-2 h-4 w-4" />
+              System Settings
+            </Button>
+            <Button className="w-full justify-start" variant="outline">
+              <Database className="mr-2 h-4 w-4" />
+              Database Tools
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>System Information</CardTitle>
+            <CardDescription>Current system status and configuration</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Environment:</span>
+                <Badge variant="outline">Production</Badge>
               </div>
-              <div className="flex items-center gap-4 p-3 border rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">New user registered</p>
-                  <p className="text-xs text-muted-foreground">Free tier signup</p>
-                </div>
-                <span className="text-xs text-muted-foreground">15 minutes ago</span>
+              <div className="flex justify-between">
+                <span>Database:</span>
+                <Badge variant="outline">Supabase</Badge>
               </div>
-              <div className="flex items-center gap-4 p-3 border rounded-lg">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Database backup completed</p>
-                  <p className="text-xs text-muted-foreground">Automated daily backup</p>
-                </div>
-                <span className="text-xs text-muted-foreground">1 hour ago</span>
+              <div className="flex justify-between">
+                <span>Admin Email:</span>
+                <span className="text-muted-foreground">{user?.email}</span>
               </div>
             </div>
           </CardContent>
