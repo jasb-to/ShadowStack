@@ -50,8 +50,8 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-medium">Email Us</h3>
                       <p className="text-sm text-muted-foreground mt-1">Our team will respond within 24 hours</p>
-                      <a href="mailto:support@shadowstack.com" className="text-primary hover:underline mt-2 block">
-                        support@shadowstack.com
+                      <a href="mailto:support@shadowstack.site" className="text-primary hover:underline mt-2 block">
+                        support@shadowstack.site
                       </a>
                     </div>
                   </div>
