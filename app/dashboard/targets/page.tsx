@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +29,7 @@ import {
   CheckCircle,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react"
 
 interface MonitoringTarget {
@@ -65,7 +65,7 @@ export default function MonitoringTargetsPage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    target_type: "wallet" as const,
+    target_type: "domain" as const,
     target_value: "",
     target_name: "",
     target_description: "",
@@ -82,21 +82,29 @@ export default function MonitoringTargetsPage() {
   const fetchTargets = async () => {
     try {
       setError(null)
+
+      if (!user?.id) {
+        throw new Error("User not authenticated")
+      }
+
+      console.log("Fetching targets for user:", user.id)
+
       const { data, error } = await supabase
         .from("monitoring_targets")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
       if (error) {
-        console.error("Error fetching targets:", error)
-        setError(`Failed to fetch targets: ${error.message}`)
+        console.error("Supabase error fetching targets:", error)
         throw error
       }
 
+      console.log("Fetched targets:", data)
       setTargets(data || [])
     } catch (error: any) {
       console.error("Error in fetchTargets:", error)
+      setError(`Failed to fetch targets: ${error.message}`)
       toast({
         title: "Error",
         description: "Failed to fetch monitoring targets. Please try again.",
@@ -109,7 +117,24 @@ export default function MonitoringTargetsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user?.id) return
+
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "User not authenticated",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!formData.target_value.trim()) {
+      toast({
+        title: "Error",
+        description: "Target value is required",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsAdding(true)
     setError(null)
@@ -126,46 +151,48 @@ export default function MonitoringTargetsPage() {
 
       console.log("Submitting target data:", targetData)
 
+      let result
       if (editingTarget) {
-        const { error } = await supabase
+        result = await supabase
           .from("monitoring_targets")
           .update(targetData)
           .eq("id", editingTarget.id)
           .eq("user_id", user.id)
-
-        if (error) {
-          console.error("Error updating target:", error)
-          setError(`Failed to update target: ${error.message}`)
-          throw error
-        }
-
-        toast({ title: "Success", description: "Target updated successfully" })
+          .select()
       } else {
-        const { error } = await supabase.from("monitoring_targets").insert([targetData])
-
-        if (error) {
-          console.error("Error adding target:", error)
-          setError(`Failed to add target: ${error.message}`)
-          throw error
-        }
-
-        toast({ title: "Success", description: "Target added successfully" })
+        result = await supabase.from("monitoring_targets").insert([targetData]).select()
       }
+
+      if (result.error) {
+        console.error("Supabase error:", result.error)
+        throw result.error
+      }
+
+      console.log("Target saved successfully:", result.data)
+
+      toast({
+        title: "Success",
+        description: editingTarget ? "Target updated successfully" : "Target added successfully",
+      })
 
       // Reset form
       setFormData({
-        target_type: "wallet",
+        target_type: "domain",
         target_value: "",
         target_name: "",
         target_description: "",
       })
       setEditingTarget(null)
-      fetchTargets()
+
+      // Refresh targets list
+      await fetchTargets()
     } catch (error: any) {
       console.error("Error in handleSubmit:", error)
+      const errorMessage = error.message || "Failed to save target. Please try again."
+      setError(errorMessage)
       toast({
         title: "Error",
-        description: error.message || "Failed to save target. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -182,7 +209,6 @@ export default function MonitoringTargetsPage() {
 
       if (error) {
         console.error("Error deleting target:", error)
-        setError(`Failed to delete target: ${error.message}`)
         throw error
       }
 
@@ -209,7 +235,6 @@ export default function MonitoringTargetsPage() {
 
       if (error) {
         console.error("Error toggling target:", error)
-        setError(`Failed to update target status: ${error.message}`)
         throw error
       }
 
@@ -238,7 +263,10 @@ export default function MonitoringTargetsPage() {
     })
 
     // Switch to the add tab
-    document.querySelector('[value="add"]')?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    const addTab = document.querySelector('[value="add"]') as HTMLElement
+    if (addTab) {
+      addTab.click()
+    }
   }
 
   const getTargetIcon = (type: string) => {
@@ -335,7 +363,7 @@ export default function MonitoringTargetsPage() {
                         <Label htmlFor="target_name">Display Name (Optional)</Label>
                         <Input
                           id="target_name"
-                          placeholder="My Main Wallet"
+                          placeholder="My Main Website"
                           value={formData.target_name}
                           onChange={(e) => setFormData({ ...formData, target_name: e.target.value })}
                         />
@@ -366,6 +394,7 @@ export default function MonitoringTargetsPage() {
 
                     <div className="flex gap-4">
                       <Button type="submit" disabled={isAdding}>
+                        {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isAdding ? "Saving..." : editingTarget ? "Update Target" : "Add Target"}
                       </Button>
                       {editingTarget && (
@@ -375,7 +404,7 @@ export default function MonitoringTargetsPage() {
                           onClick={() => {
                             setEditingTarget(null)
                             setFormData({
-                              target_type: "wallet",
+                              target_type: "domain",
                               target_value: "",
                               target_name: "",
                               target_description: "",
@@ -417,11 +446,10 @@ export default function MonitoringTargetsPage() {
                       Start by adding your first asset to monitor for security threats
                     </p>
                     <Button
-                      onClick={() =>
-                        document
-                          .querySelector('[value="add"]')
-                          ?.dispatchEvent(new MouseEvent("click", { bubbles: true }))
-                      }
+                      onClick={() => {
+                        const addTab = document.querySelector('[value="add"]') as HTMLElement
+                        if (addTab) addTab.click()
+                      }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Target
