@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -13,11 +12,12 @@ import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
 
 export default function SignInPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn } = useAuth()
+  const { signIn, loading: authLoading } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
@@ -35,10 +35,20 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      console.log("Signing in with:", formData.email)
+      console.log("🔐 Signing in with:", formData.email)
       await signIn(formData.email, formData.password)
 
       toast({
@@ -46,12 +56,28 @@ export default function SignInPage() {
         description: "You've successfully signed in.",
       })
 
-      router.push("/dashboard")
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 100)
     } catch (error: any) {
-      console.error("Sign in error:", error)
+      console.error("❌ Sign in error:", error)
+
+      let errorMessage = "Failed to sign in"
+
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password"
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Please check your email and confirm your account"
+      } else if (error.message?.includes("Too many requests")) {
+        errorMessage = "Too many attempts. Please try again later"
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign in",
+        title: "Sign In Failed",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -63,22 +89,38 @@ export default function SignInPage() {
   const handleDemoLogin = async () => {
     setIsLoading(true)
     try {
+      console.log("🎭 Demo login attempt")
       await signIn("demo@shadowstack.com", "demo12345")
+
       toast({
         title: "Welcome to the demo!",
         description: "You've been signed in with the demo account.",
       })
-      router.push("/dashboard")
+
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 100)
     } catch (error: any) {
-      console.error("Demo login error:", error)
+      console.error("❌ Demo login error:", error)
       toast({
-        title: "Error",
-        description: "Failed to sign in with demo account",
+        title: "Demo Login Failed",
+        description: "The demo account may not be set up yet. Please try creating a regular account.",
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -111,6 +153,7 @@ export default function SignInPage() {
                   onChange={handleChange}
                   value={formData.email}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -127,12 +170,20 @@ export default function SignInPage() {
                   onChange={handleChange}
                   value={formData.password}
                   required
+                  disabled={isLoading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
 
               <div className="mt-4 text-center">
@@ -143,7 +194,14 @@ export default function SignInPage() {
                   disabled={isLoading}
                   className="w-full"
                 >
-                  Try Demo Account
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading Demo...
+                    </>
+                  ) : (
+                    "Try Demo Account"
+                  )}
                 </Button>
               </div>
 
