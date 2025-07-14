@@ -5,7 +5,7 @@ import { Shield, Users, Award, Zap, CheckCircle, AlertTriangle, Eye } from "luci
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background">
       <Navbar />
 
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
@@ -236,6 +236,6 @@ export default function AboutPage() {
       </div>
 
       <Footer />
-    </div>
+    </main>
   )
 }

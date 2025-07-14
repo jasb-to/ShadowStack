@@ -1,175 +1,92 @@
-"use client"
+import Link from "next/link"
 
-import { useState, useEffect } from "react"
-import { Navbar } from "@/components/navbar"
-import { Button } from "@/components/ui/button"
-import { PricingCard } from "@/components/pricing-card"
-import type { CustomerSubscription } from "@/lib/subscription"
-import { Footer } from "@/components/footer"
-
-// Define tier products locally
-const TIER_PRODUCTS = {
-  basic: {
-    name: "Starter",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
-    price: 9.99,
-    currency: "£",
-    features: [
-      "500 monthly threat scans",
-      "Basic dashboard access",
-      "Delayed alerts (30 min)",
-      "Email support",
-      "7-day data retention",
-    ],
-    maxLimit: 500,
-  },
-  pro: {
-    name: "Growth",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
-    price: 29.99,
-    currency: "£",
-    features: [
-      "5,000 scans/month",
-      "Real-time alerts",
-      "AI threat summaries",
-      "Webhook integration",
-      "Priority email support",
-      "30-day data retention",
-    ],
-    maxLimit: 5000,
-  },
-  enterprise: {
-    name: "Mission Control",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID,
-    price: 99.99,
-    currency: "£",
-    features: [
-      "Unlimited scans",
-      "Priority AI insights",
-      "Team seats (up to 5)",
-      "Custom integrations",
-      "Dedicated account manager",
-      "90-day data retention",
-      "Custom API rate limits",
-    ],
-    maxLimit: Number.POSITIVE_INFINITY,
-  },
-}
-
-export default function PricingPage() {
-  const [isYearly, setIsYearly] = useState(false)
-  const [subscription, setSubscription] = useState<CustomerSubscription | null>(null)
-
-  useEffect(() => {
-    // Set default subscription state for demo purposes
-    setSubscription({
-      id: "",
-      tier: "none",
-      tierDetails: {
-        name: "No Subscription",
-        price: 0,
-        currency: "$",
-        features: [],
-        maxLimit: 0,
-      },
-      status: "inactive",
-      currentPeriodEnd: 0,
-    })
-  }, [])
-
+export default function Pricing() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-
-      <div className="flex-1 pt-24 pb-16">
-        <div className="container">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Transparent Pricing for Every Team</h1>
-            <p className="text-xl text-muted-foreground">
-              Choose the plan that fits your security needs. Cancel anytime.
-            </p>
-          </div>
-
-          {/* Billing Toggle */}
-          <div className="max-w-xs mx-auto mb-10 p-1 bg-muted rounded-lg flex">
-            <Button
-              variant={isYearly ? "ghost" : "default"}
-              className="flex-1 rounded-md"
-              onClick={() => setIsYearly(false)}
-            >
-              Monthly
-            </Button>
-            <Button
-              variant={isYearly ? "default" : "ghost"}
-              className="flex-1 rounded-md"
-              onClick={() => setIsYearly(true)}
-            >
-              Yearly
-              <span className="ml-1 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded">-20%</span>
-            </Button>
-          </div>
-
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <PricingCard
-              tier="basic"
-              tierDetails={TIER_PRODUCTS.basic}
-              isCurrentTier={subscription?.tier === "basic"}
-              subscription={subscription}
-              isYearly={isYearly}
-            />
-            <PricingCard
-              tier="pro"
-              tierDetails={TIER_PRODUCTS.pro}
-              isCurrentTier={subscription?.tier === "pro"}
-              subscription={subscription}
-              isYearly={isYearly}
-            />
-            <PricingCard
-              tier="enterprise"
-              tierDetails={TIER_PRODUCTS.enterprise}
-              isCurrentTier={subscription?.tier === "enterprise"}
-              subscription={subscription}
-              isYearly={isYearly}
-            />
-          </div>
-
-          {/* FAQ Section */}
-          <div className="max-w-3xl mx-auto mt-20">
-            <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">What happens if I exceed my scan limit?</h3>
-                <p className="text-muted-foreground">
-                  We'll notify you when you're approaching your limit. You can upgrade your plan or additional scans
-                  will be queued until your next billing cycle.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Can I change plans anytime?</h3>
-                <p className="text-muted-foreground">
-                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately and we'll
-                  prorate the billing.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Do you offer refunds?</h3>
-                <p className="text-muted-foreground">
-                  We offer a 30-day money-back guarantee for all new subscriptions. No questions asked.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Is my data secure?</h3>
-                <p className="text-muted-foreground">
-                  Absolutely. We use enterprise-grade encryption and follow SOC 2 compliance standards to protect your
-                  data.
-                </p>
-              </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      {/* Header */}
+      <header className="border-b border-white/10">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">IQ</span>
             </div>
+            <span className="text-xl font-bold text-white">IntentIQ</span>
+          </Link>
+          <Link
+            href="/dashboard"
+            className="border border-white/20 text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all"
+          >
+            Try Demo
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-20">
+        <h1 className="text-4xl font-bold mb-6 text-center">Pricing Plans</h1>
+        <p className="text-center text-gray-300 mb-12">Choose the plan that fits your lead generation needs</p>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-12">
+          {/* Starter Plan */}
+          <div className="bg-white/10 border border-white/20 rounded-lg p-6">
+            <h2 className="text-2xl font-bold">Starter</h2>
+            <p className="text-3xl font-bold mt-2">
+              $29<span className="text-sm font-normal">/month</span>
+            </p>
+            <ul className="mt-6 space-y-2 text-sm">
+              <li>✓ 100 keyword searches/month</li>
+              <li>✓ Reddit monitoring</li>
+              <li>✓ Basic AI intent scoring</li>
+              <li>✓ Email alerts</li>
+              <li>✓ CSV export</li>
+            </ul>
+            <button className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-6">Get Started</button>
+          </div>
+
+          {/* Growth Plan */}
+          <div className="bg-white/10 border border-purple-500/50 rounded-lg p-6 relative">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <span className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs">Most Popular</span>
+            </div>
+            <h2 className="text-2xl font-bold">Growth</h2>
+            <p className="text-3xl font-bold mt-2">
+              $99<span className="text-sm font-normal">/month</span>
+            </p>
+            <ul className="mt-6 space-y-2 text-sm">
+              <li>✓ 1,000 keyword searches/month</li>
+              <li>✓ Reddit + Twitter monitoring</li>
+              <li>✓ Advanced GPT-4 intent scoring</li>
+              <li>✓ Real-time alerts</li>
+              <li>✓ CSV export</li>
+              <li>✓ Priority support</li>
+            </ul>
+            <button className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-6">Get Started</button>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="bg-white/10 border border-white/20 rounded-lg p-6">
+            <h2 className="text-2xl font-bold">Pro</h2>
+            <p className="text-3xl font-bold mt-2">
+              $299<span className="text-sm font-normal">/month</span>
+            </p>
+            <ul className="mt-6 space-y-2 text-sm">
+              <li>✓ 5,000 keyword searches/month</li>
+              <li>✓ All platform monitoring</li>
+              <li>✓ Advanced AI analysis</li>
+              <li>✓ Slack integration</li>
+              <li>✓ API access</li>
+              <li>✓ Custom integrations</li>
+              <li>✓ Priority support</li>
+            </ul>
+            <button className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mt-6">Get Started</button>
           </div>
         </div>
+
+        <div className="text-center mt-12">
+          <Link href="/" className="border border-white/20 hover:bg-white/10 px-6 py-3 rounded-lg">
+            Back to Home
+          </Link>
+        </div>
       </div>
-      <Footer />
-    </div>
+    </main>
   )
 }
