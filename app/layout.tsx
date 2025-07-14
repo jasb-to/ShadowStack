@@ -9,9 +9,10 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "IntentIQ - AI-Powered Lead Generation",
-  description: "Turn social media into sales opportunities with AI-powered buyer intent analysis",
-    generator: 'v0.dev'
+  title: "ShadowStack - Next-Gen Cybersecurity for Dev Teams",
+  description:
+    "Real-time threat detection, AI-powered monitoring, and zero-config protection for APIs, SaaS tools, and developer endpoints. Supporting UK's 2025 National Security Strategy.",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
