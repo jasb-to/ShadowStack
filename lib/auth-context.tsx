@@ -23,33 +23,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         console.log("🔐 Getting initial session...")
+
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession()
 
         if (error) {
-          console.error("❌ Error getting session:", error)
-          setLoading(false)
+          console.error("❌ Error getting session:", error.message)
+          if (mounted) {
+            setLoading(false)
+          }
           return
         }
 
         console.log("✅ Session retrieved:", session ? "Found" : "None")
-        setSession(session)
-        setUser(session?.user ?? null)
 
-        if (session?.user) {
-          console.log("👤 User is signed in:", session.user.email)
-          await ensureUserProfile(session.user)
+        if (mounted) {
+          setSession(session)
+          setUser(session?.user ?? null)
+
+          if (session?.user) {
+            console.log("👤 User is signed in:", session.user.email)
+            await ensureUserProfile(session.user)
+          }
         }
-      } catch (error) {
-        console.error("❌ Error in getInitialSession:", error)
+      } catch (error: any) {
+        console.error("❌ Error in getInitialSession:", error.message)
       } finally {
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -60,21 +70,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("🔄 Auth state changed:", event)
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
 
-      if (event === "SIGNED_IN" && session?.user) {
-        console.log("✅ User signed in:", session.user.email)
-        await ensureUserProfile(session.user)
-      }
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
 
-      if (event === "SIGNED_OUT") {
-        console.log("👋 User signed out")
+        if (event === "SIGNED_IN" && session?.user) {
+          console.log("✅ User signed in:", session.user.email)
+          await ensureUserProfile(session.user)
+        }
+
+        if (event === "SIGNED_OUT") {
+          console.log("👋 User signed out")
+        }
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const ensureUserProfile = async (user: User) => {
@@ -87,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("❌ Error fetching user profile:", fetchError)
+        console.error("❌ Error fetching user profile:", fetchError.message)
         return
       }
 
@@ -104,13 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
 
         if (insertError) {
-          console.error("❌ Error creating user profile:", insertError)
+          console.error("❌ Error creating user profile:", insertError.message)
         } else {
           console.log("✅ User profile created successfully")
         }
       }
-    } catch (error) {
-      console.error("❌ Error in ensureUserProfile:", error)
+    } catch (error: any) {
+      console.error("❌ Error in ensureUserProfile:", error.message)
     }
   }
 
@@ -124,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        console.error("❌ Sign in error:", error)
+        console.error("❌ Sign in error:", error.message)
         throw new Error(error.message)
       }
 
@@ -135,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("✅ Sign in successful:", data.user.email)
       return data
     } catch (error: any) {
-      console.error("❌ Sign in failed:", error)
+      console.error("❌ Sign in failed:", error.message)
       throw error
     }
   }
@@ -156,14 +172,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        console.error("❌ Sign up error:", error)
+        console.error("❌ Sign up error:", error.message)
         throw new Error(error.message)
       }
 
       console.log("✅ Sign up successful:", data.user?.email)
       return data
     } catch (error: any) {
-      console.error("❌ Sign up failed:", error)
+      console.error("❌ Sign up failed:", error.message)
       throw error
     }
   }
@@ -173,12 +189,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("👋 Signing out...")
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error("❌ Sign out error:", error)
+        console.error("❌ Sign out error:", error.message)
         throw error
       }
       console.log("✅ Sign out successful")
     } catch (error: any) {
-      console.error("❌ Sign out failed:", error)
+      console.error("❌ Sign out failed:", error.message)
       throw error
     }
   }

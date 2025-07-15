@@ -1,433 +1,289 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Navbar } from "@/components/navbar"
-import { ThreatCard } from "@/components/threat-card"
-import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
-import { Shield, AlertTriangle, Eye, Activity, RefreshCw, Sparkles, Plus, Target } from "lucide-react"
-import { Footer } from "@/components/footer"
-
-interface Threat {
-  id: string
-  name: string
-  source_ip: string
-  severity: "low" | "medium" | "high" | "critical"
-  timestamp: string
-  type: string
-  blocked: boolean
-}
-
-interface DashboardData {
-  threats: Threat[]
-  timestamp: string
-  totalThreats: number
-  blockedThreats: number
-}
-
-interface DashboardStats {
-  totalTargets: number
-  activeTargets: number
-  totalAlerts: number
-  unreadAlerts: number
-  criticalAlerts: number
-}
+import { Shield, AlertTriangle, Activity, Globe, Brain, Lock, TrendingUp, Users, Eye, Zap, Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const { isSignedIn, user, loading: authLoading } = useAuth()
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [stats, setStats] = useState<DashboardStats>({
-    totalTargets: 0,
-    activeTargets: 0,
-    totalAlerts: 0,
-    unreadAlerts: 0,
-    criticalAlerts: 0,
-  })
   const [loading, setLoading] = useState(true)
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
-  const [aiInsights, setAiInsights] = useState<string>("")
+  const [stats, setStats] = useState({
+    totalThreats: 0,
+    activeMonitoring: 0,
+    riskScore: 0,
+    alertsToday: 0,
+  })
 
-  // Redirect to sign-in if not authenticated
   useEffect(() => {
-    if (!authLoading && !isSignedIn) {
-      router.push("/sign-in")
-      return
-    }
-  }, [isSignedIn, authLoading, router])
-
-  const fetchDashboardData = async () => {
-    if (!user) return
-
-    try {
-      // Fetch monitoring targets stats
-      const { data: targets, error: targetsError } = await supabase
-        .from("monitoring_targets")
-        .select("id, is_active")
-        .eq("user_id", user.id)
-
-      if (targetsError) {
-        console.error("Error fetching targets:", targetsError)
+    // Simulate loading and redirect if not authenticated
+    const timer = setTimeout(() => {
+      if (!authLoading && !user) {
+        router.push("/sign-in?message=Please sign in to access the dashboard")
+        return
       }
 
-      // Fetch alerts stats
-      const { data: alerts, error: alertsError } = await supabase
-        .from("alerts")
-        .select("id, severity, is_read")
-        .eq("user_id", user.id)
-
-      if (alertsError) {
-        console.error("Error fetching alerts:", alertsError)
-      }
-
-      // Calculate stats
-      const newStats = {
-        totalTargets: targets?.length || 0,
-        activeTargets: targets?.filter((t) => t.is_active).length || 0,
-        totalAlerts: alerts?.length || 0,
-        unreadAlerts: alerts?.filter((a) => !a.is_read).length || 0,
-        criticalAlerts: alerts?.filter((a) => a.severity === "critical").length || 0,
-      }
-
-      setStats(newStats)
-
-      // Fetch simulated threat data
-      const response = await fetch("/api/threats")
-      if (response.ok) {
-        const threatData = await response.json()
-
-        const transformedThreats = threatData.threats.map((threat: any) => ({
-          ...threat,
-          source_ip: threat.sourceIp || threat.source_ip,
-        }))
-
-        setData({
-          ...threatData,
-          threats: transformedThreats,
-        })
-      }
-
-      setLastUpdate(new Date())
-
-      // Generate AI insights
-      generateAIInsights(data?.threats || [], newStats)
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error)
-    } finally {
+      // Mock data for demo
+      setStats({
+        totalThreats: 247,
+        activeMonitoring: 12,
+        riskScore: 85,
+        alertsToday: 8,
+      })
       setLoading(false)
-    }
-  }
+    }, 1000)
 
-  const generateAIInsights = (threats: Threat[], dashboardStats: DashboardStats) => {
-    let insights = ""
+    return () => clearTimeout(timer)
+  }, [user, authLoading, router])
 
-    if (dashboardStats.totalTargets === 0) {
-      insights =
-        "🎯 Get started by adding your first monitoring target. Add wallet addresses, domains, or API endpoints to begin threat detection."
-    } else if (dashboardStats.criticalAlerts > 0) {
-      insights = `🚨 ${dashboardStats.criticalAlerts} critical alerts require immediate attention. Review your alerts page for detailed information.`
-    } else if (dashboardStats.unreadAlerts > 0) {
-      insights = `📬 You have ${dashboardStats.unreadAlerts} unread alerts. ${dashboardStats.activeTargets} targets are actively monitored.`
-    } else if (threats.length === 0) {
-      insights = `🛡️ All systems secure! ${dashboardStats.activeTargets} targets are being monitored with no active threats detected.`
-    } else {
-      const blockedCount = threats.filter((t) => t.blocked).length
-      insights = `📊 Monitoring ${dashboardStats.activeTargets} targets. ${blockedCount} out of ${threats.length} recent threats have been automatically blocked.`
-    }
-
-    setAiInsights(insights)
-  }
-
-  useEffect(() => {
-    if (!authLoading && isSignedIn && user) {
-      fetchDashboardData()
-
-      // Update every 30 seconds
-      const interval = setInterval(fetchDashboardData, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [isSignedIn, user, authLoading])
-
-  const getSeverityStats = () => {
-    if (!data) return { critical: 0, high: 0, medium: 0, low: 0 }
-
-    return data.threats.reduce(
-      (acc, threat) => {
-        acc[threat.severity]++
-        return acc
-      },
-      { critical: 0, high: 0, medium: 0, low: 0 },
-    )
-  }
-
-  // Show loading while auth is loading
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading...</p>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="flex items-center space-x-3">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+          <span className="text-xl">Loading ShadowStack Dashboard...</span>
         </div>
       </div>
     )
   }
 
-  // Don't render dashboard if not signed in
-  if (!isSignedIn) {
-    return null
+  if (!user) {
+    return null // Will redirect
   }
 
-  const severityStats = getSeverityStats()
+  const mockAlerts = [
+    {
+      id: 1,
+      severity: "critical",
+      message: "Suspicious API access detected from unknown IP",
+      source: "API Monitor",
+      time: "2 minutes ago",
+      status: "active",
+    },
+    {
+      id: 2,
+      severity: "high",
+      message: "Potential data exfiltration attempt blocked",
+      source: "LLM Defense",
+      time: "15 minutes ago",
+      status: "resolved",
+    },
+    {
+      id: 3,
+      severity: "medium",
+      message: "Unusual login pattern detected",
+      source: "Behavior Analysis",
+      time: "1 hour ago",
+      status: "investigating",
+    },
+  ]
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case "critical":
+        return "bg-red-500/20 text-red-400 border-red-500/30"
+      case "high":
+        return "bg-orange-500/20 text-orange-400 border-orange-500/30"
+      case "medium":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+      default:
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navbar />
-
-      <div className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="border-b border-gray-800 bg-gray-900/50">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2 text-white">Security Dashboard</h1>
-              <p className="text-slate-400">Real-time threat monitoring and protection status</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                ShadowStack Dashboard
+              </h1>
+              <p className="text-gray-400 mt-1">Welcome back, {user.email}</p>
             </div>
-            <div className="flex items-center gap-4 mt-4 sm:mt-0">
-              <div className="text-sm text-slate-400">Last updated: {lastUpdate.toLocaleTimeString()}</div>
-              <Button variant="outline" size="sm" onClick={fetchDashboardData} disabled={loading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
+            <div className="flex items-center space-x-4">
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                <Activity className="w-4 h-4 mr-2" />
+                System Online
+              </Badge>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Quick Actions */}
-          {stats.totalTargets === 0 && (
-            <Card className="mb-8 border-cyan-500/20 bg-cyan-500/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 text-white">Get Started</h3>
-                    <p className="text-slate-400 mb-4">
-                      Add your first monitoring target to start detecting security threats
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-                  >
-                    <Link href="/dashboard/targets">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Target
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-300">Monitoring Targets</CardTitle>
-                <Target className="h-4 w-4 text-slate-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stats.activeTargets}</div>
-                <p className="text-xs text-slate-400">
-                  {stats.totalTargets} total ({stats.activeTargets} active)
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-300">Total Alerts</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-slate-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stats.totalAlerts}</div>
-                <p className="text-xs text-slate-400">{stats.unreadAlerts} unread</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-300">Critical Alerts</CardTitle>
-                <Activity className="h-4 w-4 text-slate-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-400">{stats.criticalAlerts}</div>
-                <p className="text-xs text-slate-400">Requires attention</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900/50 border-slate-800">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-300">System Status</CardTitle>
-                <Eye className="h-4 w-4 text-slate-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-green-400">Active</span>
-                </div>
-                <p className="text-xs text-slate-400">All systems operational</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* AI Insights Card */}
-          <Card className="mb-8 bg-slate-900/50 border-purple-500/20">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-purple-400" />
-                <CardTitle className="text-white">AI Security Insights</CardTitle>
-              </div>
-              <CardDescription className="text-slate-400">
-                Real-time analysis of your security landscape
-              </CardDescription>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Total Threats Detected</CardTitle>
+              <Shield className="h-4 w-4 text-red-400" />
             </CardHeader>
             <CardContent>
-              <p className="text-sm leading-relaxed text-slate-300">
-                {aiInsights || "Analyzing current threat patterns..."}
-              </p>
+              <div className="text-2xl font-bold text-white">{stats.totalThreats}</div>
+              <p className="text-xs text-gray-500">+12% from last month</p>
             </CardContent>
           </Card>
 
-          {/* Quick Navigation */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card
-              className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
-              onClick={() => router.push("/dashboard/targets")}
-            >
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Active Monitoring</CardTitle>
+              <Eye className="h-4 w-4 text-cyan-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.activeMonitoring}</div>
+              <p className="text-xs text-gray-500">Targets being monitored</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Risk Score</CardTitle>
+              <TrendingUp className="h-4 w-4 text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.riskScore}/100</div>
+              <p className="text-xs text-gray-500">-5 points from yesterday</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Alerts Today</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.alertsToday}</div>
+              <p className="text-xs text-gray-500">3 critical, 5 medium</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Alerts */}
+          <div className="lg:col-span-2">
+            <Card className="bg-gray-900/50 border-gray-800">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Target className="h-5 w-5 text-cyan-400" />
-                  Monitoring Targets
+                <CardTitle className="text-white flex items-center">
+                  <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
+                  Recent Security Alerts
                 </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Manage your monitored assets and add new targets
+                <CardDescription className="text-gray-400">
+                  Latest threats detected across your monitored assets
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-white">{stats.totalTargets}</span>
-                  <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
-                    Manage →
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
-              onClick={() => router.push("/dashboard/alerts")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <AlertTriangle className="h-5 w-5 text-cyan-400" />
-                  Security Alerts
-                </CardTitle>
-                <CardDescription className="text-slate-400">View and manage your security alerts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-white">{stats.unreadAlerts}</span>
-                  <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
-                    View →
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer"
-              onClick={() => router.push("/dashboard/settings")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Shield className="h-5 w-5 text-cyan-400" />
-                  Settings
-                </CardTitle>
-                <CardDescription className="text-slate-400">Configure notifications and integrations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-400">Configure</span>
-                  <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
-                    Settings →
-                  </Button>
-                </div>
+              <CardContent className="space-y-4">
+                {mockAlerts.map((alert) => (
+                  <div key={alert.id} className="flex items-start space-x-4 p-4 rounded-lg bg-gray-800/50">
+                    <div className="flex-shrink-0">
+                      <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium">{alert.message}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
+                        <span>{alert.source}</span>
+                        <span>•</span>
+                        <span>{alert.time}</span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Badge variant="outline" className="text-xs">
+                        {alert.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full mt-4 bg-transparent">
+                  View All Alerts
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Severity Overview */}
-          {data && data.threats.length > 0 && (
-            <Card className="mb-8 bg-slate-900/50 border-slate-800">
+          {/* System Status */}
+          <div className="space-y-6">
+            <Card className="bg-gray-900/50 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Recent Threat Activity</CardTitle>
-                <CardDescription className="text-slate-400">Latest security events and threat levels</CardDescription>
+                <CardTitle className="text-white flex items-center">
+                  <Activity className="w-5 h-5 mr-2 text-green-400" />
+                  System Status
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-4 mb-4">
-                  <Badge className="bg-red-500/10 text-red-400 border-red-500/20">
-                    Critical: {severityStats.critical}
-                  </Badge>
-                  <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20">
-                    High: {severityStats.high}
-                  </Badge>
-                  <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
-                    Medium: {severityStats.medium}
-                  </Badge>
-                  <Badge className="bg-green-500/10 text-green-400 border-green-500/20">Low: {severityStats.low}</Badge>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">OSINT Monitoring</span>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Online</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">AI Threat Detection</span>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Active</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">API Monitoring</span>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Healthy</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Email Alerts</span>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Enabled</Badge>
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Recent Threats */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Recent Threat Simulations</h2>
-              <Badge variant="outline" className="border-slate-600 text-slate-400">
-                Demo Data - Live Updates Every 30s
-              </Badge>
-            </div>
+            <Card className="bg-gray-900/50 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Brain className="w-5 h-5 mr-2 text-purple-400" />
+                  AI Safety Toolkit
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Prompt Injection Detection</span>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Active</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Model Exfiltration Guard</span>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Monitoring</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Behavior Analysis</span>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Learning</Badge>
+                </div>
+              </CardContent>
+            </Card>
 
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse bg-slate-900/50 border-slate-800">
-                    <CardHeader>
-                      <div className="h-4 bg-slate-700 rounded w-3/4"></div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="h-3 bg-slate-700 rounded"></div>
-                        <div className="h-3 bg-slate-700 rounded w-2/3"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data?.threats.map((threat, index) => (
-                  <ThreatCard key={threat.id} threat={threat} index={index} />
-                ))}
-              </div>
-            )}
+            <Card className="bg-gray-900/50 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Zap className="w-5 h-5 mr-2 text-yellow-400" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Globe className="w-4 h-4 mr-2" />
+                  Add Monitoring Target
+                </Button>
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Lock className="w-4 h-4 mr-2" />
+                  Run Security Scan
+                </Button>
+                <Button variant="outline" className="w-full justify-start bg-transparent">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Team Access
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

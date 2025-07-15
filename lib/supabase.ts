@@ -1,34 +1,148 @@
 import { createClient } from "@supabase/supabase-js"
 
+// Mock Supabase for preview environment
+const isMockMode = typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net")
+
 // Environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ufmysxronjaohovgoecc.supabase.co"
 const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbXlzeHJvbmphb2hvdmdvZWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMDI0NzcsImV4cCI6MjAzMzg3ODQ3N30.Nh-hJRYGnQgxvdUEWwNgJN-kxTKyZXP5aQvmRsF-8QE"
 
-console.log("🔧 Supabase URL:", supabaseUrl)
-console.log("🔧 Supabase Anon Key:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
+console.log("🔧 Supabase Configuration:")
+console.log("URL:", supabaseUrl)
+console.log("Mock Mode:", isMockMode)
+console.log("Anon Key:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
 
-// Client-side Supabase client (uses anon key + user JWT)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
-  },
-})
+// Create mock client for preview environment
+const createMockClient = () => {
+  return {
+    auth: {
+      getSession: async () => {
+        const mockSession = localStorage.getItem("mock-session")
+        return {
+          data: { session: mockSession ? JSON.parse(mockSession) : null },
+          error: null,
+        }
+      },
+      signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+        console.log("🎭 Mock sign in:", email)
 
-// Test the connection
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error("❌ Supabase connection error:", error)
-  } else {
-    console.log("✅ Supabase connected successfully")
+        // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        // Mock successful login
+        const mockUser = {
+          id: "mock-user-id",
+          email: email,
+          user_metadata: {
+            full_name: "Demo User",
+            company_name: "Demo Company",
+          },
+        }
+
+        const mockSession = {
+          user: mockUser,
+          access_token: "mock-token",
+          refresh_token: "mock-refresh",
+        }
+
+        localStorage.setItem("mock-session", JSON.stringify(mockSession))
+
+        return {
+          data: { user: mockUser, session: mockSession },
+          error: null,
+        }
+      },
+      signUp: async ({ email, password, options }: any) => {
+        console.log("🎭 Mock sign up:", email)
+
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        const mockUser = {
+          id: "mock-user-id",
+          email: email,
+          user_metadata: options?.data || {},
+        }
+
+        return {
+          data: { user: mockUser },
+          error: null,
+        }
+      },
+      signOut: async () => {
+        console.log("🎭 Mock sign out")
+        localStorage.removeItem("mock-session")
+        return { error: null }
+      },
+      onAuthStateChange: (callback: Function) => {
+        console.log("🎭 Mock auth state change listener")
+
+        // Check for existing session on mount
+        const mockSession = localStorage.getItem("mock-session")
+        if (mockSession) {
+          setTimeout(() => {
+            callback("SIGNED_IN", JSON.parse(mockSession))
+          }, 100)
+        }
+
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => console.log("🎭 Mock unsubscribe"),
+            },
+          },
+        }
+      },
+    },
+    from: (table: string) => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({ data: null, error: { code: "PGRST116" } }),
+        }),
+      }),
+      insert: async () => ({ error: null }),
+    }),
   }
-})
+}
 
-// Server-side Supabase client - ONLY for server-side API routes
+// Use mock client in preview environment, real client otherwise
+export const supabase = isMockMode
+  ? (createMockClient() as any)
+  : createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: "pkce",
+      },
+      global: {
+        headers: {
+          "X-Client-Info": "shadowstack-web",
+        },
+      },
+    })
+
+// Test connection only for real Supabase
+if (!isMockMode) {
+  supabase.auth
+    .getSession()
+    .then(({ data, error }) => {
+      if (error) {
+        console.error("❌ Supabase connection error:", error.message)
+      } else {
+        console.log("✅ Supabase connected successfully")
+        if (data.session) {
+          console.log("👤 Active session found for:", data.session.user.email)
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("❌ Supabase initialization error:", error)
+    })
+}
+
+// Server-side client for API routes
 export function createServerClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -45,7 +159,7 @@ export function createServerClient() {
   })
 }
 
-// Types
+// Database types
 export interface UserProfile {
   id: string
   email: string
