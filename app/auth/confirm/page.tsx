@@ -1,27 +1,45 @@
-import { Navbar } from "@/components/navbar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MailCheck } from "lucide-react"
+"use client"
 
-export default function AuthConfirmPage() {
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Shield, Mail, ArrowLeft } from "lucide-react"
+import Link from "next/link"
+
+export default function ConfirmPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
-      <div className="flex-1 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <div className="mx-auto bg-primary/10 text-primary p-3 rounded-full">
-              <MailCheck className="h-8 w-8" />
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Link href="/" className="flex items-center justify-center mb-6">
+          <Shield className="h-8 w-8 text-blue-600" />
+          <span className="ml-2 text-2xl font-bold text-gray-900">ShadowStack</span>
+        </Link>
+
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
+              <Mail className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="mt-4 text-2xl font-bold">Confirm your email</CardTitle>
+            <CardTitle className="text-2xl">Check your email</CardTitle>
             <CardDescription>
-              We've sent a confirmation link to your email address. Please check your inbox (and spam folder) to
-              complete the sign-up process.
+              We've sent you a confirmation link. Please check your email and click the link to activate your account.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">This page can be safely closed.</p>
+          <CardContent className="text-center">
+            <p className="text-sm text-gray-600 mb-6">
+              Didn't receive the email? Check your spam folder or contact support.
+            </p>
+            <Button asChild variant="outline" className="w-full bg-transparent">
+              <Link href="/sign-in">Back to Sign In</Link>
+            </Button>
           </CardContent>
         </Card>
+
+        <div className="mt-8 text-center">
+          <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to home
+          </Link>
+        </div>
       </div>
     </div>
   )

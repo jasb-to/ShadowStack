@@ -1,309 +1,308 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect, type FormEvent } from "react"
-import { supabase, type MonitoringTarget } from "@/lib/supabase"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { PlusCircle, Edit, Trash2, AlertTriangle, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Shield, Plus, Trash2, ArrowLeft, Target } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
+
+interface MonitoringTarget {
+  id: string
+  target_type: string
+  target_value: string
+  target_name?: string
+  target_description?: string
+  is_active: boolean
+  created_at: string
+}
 
 export default function TargetsPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading } = useAuth()
+  const router = useRouter()
   const { toast } = useToast()
   const [targets, setTargets] = useState<MonitoringTarget[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [editingTarget, setEditingTarget] = useState<MonitoringTarget | null>(null)
-
-  const [formState, setFormState] = useState({
-    target_type: "domain",
+  const [loadingTargets, setLoadingTargets] = useState(true)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formData, setFormData] = useState({
+    target_type: "",
     target_value: "",
     target_name: "",
+    target_description: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.push("/sign-in")
+      return
+    }
+
     if (user) {
       fetchTargets()
-    } else if (!authLoading) {
-      setLoading(false)
     }
-  }, [user, authLoading])
+  }, [user, loading, router])
 
   const fetchTargets = async () => {
-    if (!user) return
-    setLoading(true)
     try {
       const { data, error } = await supabase
         .from("monitoring_targets")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user?.id)
         .order("created_at", { ascending: false })
+
       if (error) throw error
       setTargets(data || [])
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error fetching targets:", error)
       toast({
-        title: "Error fetching targets",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load monitoring targets",
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setLoadingTargets(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormState((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (value: string) => {
-    setFormState((prev) => ({ ...prev, target_type: value }))
-  }
-
-  const resetForm = () => {
-    setFormState({
-      target_type: "domain",
-      target_value: "",
-      target_name: "",
-    })
-    setEditingTarget(null)
-  }
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !formState.target_value) return
-
-    setIsSubmitting(true)
-    try {
-      if (editingTarget) {
-        // Update existing target
-        const { error } = await supabase
-          .from("monitoring_targets")
-          .update({
-            target_type: formState.target_type as MonitoringTarget["target_type"],
-            target_value: formState.target_value,
-            target_name: formState.target_name || null,
-          })
-          .eq("id", editingTarget.id)
-          .eq("user_id", user.id)
-
-        if (error) throw error
-        toast({ title: "Success", description: "Target updated successfully." })
-      } else {
-        // Create new target
-        const { error } = await supabase.from("monitoring_targets").insert({
-          user_id: user.id,
-          target_type: formState.target_type as MonitoringTarget["target_type"],
-          target_value: formState.target_value,
-          target_name: formState.target_name || null,
-        })
-        if (error) throw error
-        toast({ title: "Success", description: "Target added successfully." })
-      }
-      resetForm()
-      fetchTargets()
-    } catch (error: any) {
-      toast({
-        title: "Submission Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleEdit = (target: MonitoringTarget) => {
-    setEditingTarget(target)
-    setFormState({
-      target_type: target.target_type,
-      target_value: target.target_value,
-      target_name: target.target_name || "",
-    })
-  }
-
-  const handleDelete = async (targetId: string) => {
-    if (!user || !window.confirm("Are you sure you want to delete this target?")) return
+    setSubmitting(true)
 
     try {
-      const { error } = await supabase.from("monitoring_targets").delete().eq("id", targetId).eq("user_id", user.id)
+      const { error } = await supabase.from("monitoring_targets").insert([
+        {
+          user_id: user?.id,
+          target_type: formData.target_type,
+          target_value: formData.target_value,
+          target_name: formData.target_name || null,
+          target_description: formData.target_description || null,
+          is_active: true,
+        },
+      ])
+
       if (error) throw error
-      toast({ title: "Success", description: "Target deleted." })
-      fetchTargets()
-    } catch (error: any) {
-      toast({
-        title: "Deletion Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
 
-  const handleToggleActive = async (target: MonitoringTarget) => {
-    if (!user) return
-    try {
-      const { error } = await supabase
-        .from("monitoring_targets")
-        .update({ is_active: !target.is_active })
-        .eq("id", target.id)
-        .eq("user_id", user.id)
-      if (error) throw error
       toast({
         title: "Success",
-        description: `Target ${!target.is_active ? "activated" : "deactivated"}.`,
+        description: "Monitoring target added successfully",
       })
+
+      setFormData({ target_type: "", target_value: "", target_name: "", target_description: "" })
+      setShowAddForm(false)
       fetchTargets()
     } catch (error: any) {
       toast({
-        title: "Update Error",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to add monitoring target",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this monitoring target?")) return
+
+    try {
+      const { error } = await supabase.from("monitoring_targets").delete().eq("id", id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Monitoring target deleted successfully",
+      })
+
+      fetchTargets()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete monitoring target",
         variant: "destructive",
       })
     }
   }
 
-  if (authLoading || loading) {
+  if (loading || !user) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Monitoring Targets</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <Link href="/dashboard" className="mr-4">
+                <ArrowLeft className="h-6 w-6 text-gray-600 hover:text-gray-900" />
+              </Link>
+              <Shield className="h-8 w-8 text-blue-600" />
+              <span className="ml-2 text-2xl font-bold text-gray-900">ShadowStack</span>
+            </div>
+            <div className="text-sm text-gray-600">{user.email}</div>
+          </div>
+        </div>
+      </div>
 
-      <Card>
-        <form onSubmit={handleSubmit}>
-          <CardHeader>
-            <CardTitle>{editingTarget ? "Edit Target" : "Add New Target"}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="target_type">Target Type</Label>
-              <Select onValueChange={handleSelectChange} value={formState.target_type}>
-                <SelectTrigger id="target_type">
-                  <SelectValue placeholder="Select a type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="domain">Domain/Website</SelectItem>
-                  <SelectItem value="api">API Endpoint</SelectItem>
-                  <SelectItem value="wallet">Crypto Wallet</SelectItem>
-                  <SelectItem value="email">Email Address</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="target_value">Value</Label>
-              <Input
-                id="target_value"
-                name="target_value"
-                value={formState.target_value}
-                onChange={handleInputChange}
-                placeholder="e.g., example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="target_name">Name (Optional)</Label>
-              <Input
-                id="target_name"
-                name="target_name"
-                value={formState.target_name}
-                onChange={handleInputChange}
-                placeholder="e.g., My Company Website"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end gap-2">
-            {editingTarget && (
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel Edit
-              </Button>
-            )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : editingTarget ? (
-                "Save Changes"
-              ) : (
-                <PlusCircle className="mr-2 h-4 w-4" />
-              )}
-              {editingTarget ? "Save Changes" : "Add Target"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Monitoring Targets</h1>
+            <p className="text-gray-600 mt-2">Manage the assets you want to monitor for security threats</p>
+          </div>
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Target
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Targets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <Head>Status</Head>
-                <Head>Name</Head>
-                <Head>Type</Head>
-                <Head>Value</Head>
-                <Head>Created</Head>
-                <Head className="text-right">Actions</Head>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {targets.length > 0 ? (
-                targets.map((target) => (
-                  <TableRow key={target.id}>
-                    <TableCell>
-                      <Switch
-                        checked={target.is_active}
-                        onCheckedChange={() => handleToggleActive(target)}
-                        aria-label="Toggle target status"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{target.target_name || "N/A"}</TableCell>
-                    <TableCell className="capitalize">{target.target_type}</TableCell>
-                    <TableCell className="font-mono">{target.target_value}</TableCell>
-                    <TableCell>{new Date(target.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(target)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(target.id)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <AlertTriangle className="h-8 w-8 text-muted-foreground" />
-                      <p>No targets found. Add one above to start monitoring.</p>
+        {/* Add Target Form */}
+        {showAddForm && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Add New Monitoring Target</CardTitle>
+              <CardDescription>Add a new asset to monitor for security threats</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="target_type">Target Type</Label>
+                    <Select
+                      value={formData.target_type}
+                      onValueChange={(value) => setFormData({ ...formData, target_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select target type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="wallet">Crypto Wallet</SelectItem>
+                        <SelectItem value="domain">Domain</SelectItem>
+                        <SelectItem value="email">Email Address</SelectItem>
+                        <SelectItem value="api">API Endpoint</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="target_value">Target Value</Label>
+                    <Input
+                      id="target_value"
+                      placeholder="Enter the asset to monitor"
+                      value={formData.target_value}
+                      onChange={(e) => setFormData({ ...formData, target_value: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="target_name">Name (Optional)</Label>
+                  <Input
+                    id="target_name"
+                    placeholder="Friendly name for this target"
+                    value={formData.target_name}
+                    onChange={(e) => setFormData({ ...formData, target_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="target_description">Description (Optional)</Label>
+                  <Input
+                    id="target_description"
+                    placeholder="Brief description of this asset"
+                    value={formData.target_description}
+                    onChange={(e) => setFormData({ ...formData, target_description: e.target.value })}
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? "Adding..." : "Add Target"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Targets List */}
+        <div className="space-y-4">
+          {loadingTargets ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-8">
+                <Target className="h-8 w-8 animate-spin" />
+              </CardContent>
+            </Card>
+          ) : targets.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No monitoring targets</h3>
+                <p className="text-gray-600 mb-4">Get started by adding your first asset to monitor</p>
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Target
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            targets.map((target) => (
+              <Card key={target.id}>
+                <CardContent className="flex items-center justify-between py-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Target className="h-5 w-5 text-blue-600" />
                     </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium">{target.target_name || target.target_value}</h3>
+                        <Badge variant={target.target_type === "wallet" ? "default" : "secondary"}>
+                          {target.target_type}
+                        </Badge>
+                        <Badge variant={target.is_active ? "default" : "secondary"}>
+                          {target.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">{target.target_value}</p>
+                      {target.target_description && (
+                        <p className="text-sm text-gray-500">{target.target_description}</p>
+                      )}
+                      <p className="text-xs text-gray-500">Added {new Date(target.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(target.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   )
 }
-
-// Custom TableHead component for cleaner code
-const Head = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <TableHead className={className}>{children}</TableHead>
-)
