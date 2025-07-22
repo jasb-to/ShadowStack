@@ -1,12 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 
 export default function AdminLayout({
   children,
@@ -14,8 +11,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const { isSignedIn, user, loading } = useAuth()
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { isSignedIn, user, loading, isAdmin } = useAuth()
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
@@ -26,28 +22,13 @@ export default function AdminLayout({
       return
     }
 
-    // Check if user is admin
-    const checkAdminStatus = async () => {
-      try {
-        // For now, check if email is the admin email
-        const isAdminUser = user?.email === "jaspalbilkhu@gmail.com"
-
-        if (!isAdminUser) {
-          router.push("/dashboard")
-          return
-        }
-
-        setIsAdmin(true)
-      } catch (error) {
-        console.error("Error checking admin status:", error)
-        router.push("/dashboard")
-      } finally {
-        setChecking(false)
-      }
+    if (!isAdmin) {
+      router.push("/dashboard")
+      return
     }
 
-    checkAdminStatus()
-  }, [isSignedIn, user, loading, router])
+    setChecking(false)
+  }, [isSignedIn, user, loading, isAdmin, router])
 
   if (loading || checking) {
     return (
@@ -64,11 +45,5 @@ export default function AdminLayout({
     return null
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="pt-16">{children}</div>
-      <Footer />
-    </div>
-  )
+  return <>{children}</>
 }

@@ -45,24 +45,26 @@ export function PricingCard({
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubscription = async () => {
-    if (!isSignedIn) {
-      router.push("/sign-up")
-      return
-    }
-
-    if (isCurrentTier) {
-      router.push("/dashboard")
-      return
-    }
+    setIsLoading(true)
 
     try {
-      setIsLoading(true)
-      // For demo purposes, just redirect to dashboard
-      setTimeout(() => {
+      if (!isSignedIn) {
+        // Redirect to sign-up if not signed in
+        router.push("/sign-up")
+        return
+      }
+
+      if (isCurrentTier) {
+        // If it's the current tier, go to dashboard
         router.push("/dashboard")
-      }, 1000)
+        return
+      }
+
+      // For now, redirect to dashboard with a success message
+      // In production, this would integrate with Stripe
+      router.push("/dashboard?upgraded=true")
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Error handling subscription:", error)
     } finally {
       setIsLoading(false)
     }
@@ -73,7 +75,7 @@ export function PricingCard({
 
   const tierColorClasses = {
     basic: "border-green-500/20 hover:border-green-500/40",
-    pro: "border-blue-500/20 hover:border-blue-500/40",
+    pro: "border-blue-500/20 hover:border-blue-500/40 ring-2 ring-blue-500/20",
     enterprise: "border-purple-500/20 hover:border-purple-500/40",
     none: "",
   }
@@ -85,8 +87,18 @@ export function PricingCard({
     none: "bg-gray-500/10 text-gray-500",
   }
 
+  const buttonVariant = tier === "pro" ? "default" : "outline"
+
   return (
-    <div className={`rounded-xl border bg-card shadow-lg transition-all hover:shadow-xl ${tierColorClasses[tier]}`}>
+    <div
+      className={`rounded-xl border bg-card shadow-lg transition-all hover:shadow-xl ${tierColorClasses[tier]} relative`}
+    >
+      {tier === "pro" && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">Most Popular</span>
+        </div>
+      )}
+
       <div className="flex flex-col p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">{tierDetails.name}</h3>
@@ -94,6 +106,7 @@ export function PricingCard({
             {tier === "basic" ? "Starter" : tier === "pro" ? "Popular" : "Premium"}
           </div>
         </div>
+
         <div className="mb-4">
           <div className="flex items-end">
             <span className="text-3xl font-bold">
@@ -104,28 +117,24 @@ export function PricingCard({
           </div>
           {isYearly && <p className="text-xs text-muted-foreground mt-1">20% discount applied</p>}
         </div>
-        <ul className="mb-6 space-y-2">
+
+        <ul className="mb-6 space-y-2 flex-grow">
           {tierDetails.features.map((feature) => (
             <li key={feature} className="flex items-center text-sm">
-              <Check className="h-4 w-4 mr-2 text-green-500" />
-              {feature}
+              <Check className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
+              <span>{feature}</span>
             </li>
           ))}
         </ul>
+
         <div className="mt-auto">
           <Button
             className="w-full"
             onClick={handleSubscription}
             disabled={isLoading}
-            variant={isCurrentTier ? "outline" : "default"}
+            variant={isCurrentTier ? "outline" : buttonVariant}
           >
-            {isLoading
-              ? "Loading..."
-              : isCurrentTier
-                ? "Current Plan"
-                : subscription?.tier === "none"
-                  ? "Subscribe"
-                  : "Switch Plan"}
+            {isLoading ? "Loading..." : isCurrentTier ? "Current Plan" : !isSignedIn ? "Get Started" : "Upgrade Now"}
           </Button>
         </div>
       </div>

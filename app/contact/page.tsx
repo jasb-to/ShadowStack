@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -11,21 +10,57 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, MapPin, MessageSquare } from "lucide-react"
+import { Mail, MapPin, MessageSquare, Phone } from "lucide-react"
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    company: "",
+    subject: "",
+    message: "",
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      // Simulate form submission - in production, this would send to your backend
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      // Here you would typically send the form data to your backend
+      console.log("Form submitted:", formData)
+
       setSubmitted(true)
-    }, 1500)
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        company: "",
+        subject: "",
+        message: "",
+      })
+    } catch (error) {
+      console.error("Error submitting form:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const startLiveChat = () => {
+    // Simple implementation - in production you'd integrate with a chat service like Intercom, Zendesk, etc.
+    alert("Live chat feature coming soon! Please email us at support@shadowstack.site for immediate assistance.")
   }
 
   return (
@@ -61,12 +96,29 @@ export default function ContactPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-start space-x-4">
+                    <Phone className="h-6 w-6 text-primary mt-1" />
+                    <div>
+                      <h3 className="font-medium">Call Us</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Monday to Friday, 9am-6pm GMT</p>
+                      <a href="tel:+441234567890" className="text-primary hover:underline mt-2 block">
+                        +44 (0) 123 456 7890
+                      </a>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-start space-x-4">
                     <MapPin className="h-6 w-6 text-primary mt-1" />
                     <div>
                       <h3 className="font-medium">Visit Us</h3>
                       <p className="text-sm text-muted-foreground mt-1">Our headquarters</p>
                       <address className="not-italic text-sm mt-2">
                         Birmingham City Centre
+                        <br />
+                        West Midlands
                         <br />
                         United Kingdom
                       </address>
@@ -82,7 +134,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-medium">Live Chat</h3>
                       <p className="text-sm text-muted-foreground mt-1">Chat with our support team</p>
-                      <Button variant="link" className="p-0 h-auto mt-2">
+                      <Button variant="link" className="p-0 h-auto mt-2" onClick={startLiveChat}>
                         Start a conversation
                       </Button>
                     </div>
@@ -115,7 +167,7 @@ export default function ContactPage() {
                       </div>
                       <h3 className="text-xl font-medium mb-2">Message Sent!</h3>
                       <p className="text-muted-foreground">
-                        Thank you for contacting us. We'll get back to you shortly.
+                        Thank you for contacting us. We'll get back to you within 24 hours.
                       </p>
                       <Button className="mt-6" onClick={() => setSubmitted(false)}>
                         Send Another Message
@@ -125,23 +177,41 @@ export default function ContactPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="name">Full Name</Label>
-                          <Input id="name" placeholder="John Doe" required />
+                          <Label htmlFor="name">Full Name *</Label>
+                          <Input
+                            id="name"
+                            placeholder="John Doe"
+                            required
+                            value={formData.name}
+                            onChange={(e) => handleInputChange("name", e.target.value)}
+                          />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="john@example.com" required />
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="john@example.com"
+                            required
+                            value={formData.email}
+                            onChange={(e) => handleInputChange("email", e.target.value)}
+                          />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="company">Company (Optional)</Label>
-                          <Input id="company" placeholder="Your Company" />
+                          <Input
+                            id="company"
+                            placeholder="Your Company"
+                            value={formData.company}
+                            onChange={(e) => handleInputChange("company", e.target.value)}
+                          />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="subject">Subject</Label>
-                          <Select>
+                          <Label htmlFor="subject">Subject *</Label>
+                          <Select onValueChange={(value) => handleInputChange("subject", value)}>
                             <SelectTrigger id="subject">
                               <SelectValue placeholder="Select a subject" />
                             </SelectTrigger>
@@ -151,17 +221,31 @@ export default function ContactPage() {
                               <SelectItem value="support">Technical Support</SelectItem>
                               <SelectItem value="billing">Billing Issue</SelectItem>
                               <SelectItem value="partnership">Partnership Opportunity</SelectItem>
+                              <SelectItem value="demo">Request Demo</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="message">Message</Label>
-                        <Textarea id="message" placeholder="How can we help you?" rows={6} required />
+                        <Label htmlFor="message">Message *</Label>
+                        <Textarea
+                          id="message"
+                          placeholder="How can we help you?"
+                          rows={6}
+                          required
+                          value={formData.message}
+                          onChange={(e) => handleInputChange("message", e.target.value)}
+                        />
                       </div>
 
-                      <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={
+                          isSubmitting || !formData.name || !formData.email || !formData.subject || !formData.message
+                        }
+                      >
                         {isSubmitting ? "Sending..." : "Send Message"}
                       </Button>
                     </form>
