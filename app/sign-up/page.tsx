@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -14,7 +12,6 @@ import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/hooks/use-toast"
 
 export default function SignUpPage() {
-  const router = useRouter()
   const { signUp } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -36,21 +33,14 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      console.log("Signing up with:", formData.email)
       await signUp(formData.email, formData.password, formData.fullName, formData.company)
-
-      toast({
-        title: "Account created!",
-        description: "You've been signed up successfully.",
-      })
-
-      // Redirect to dashboard
-      router.push("/dashboard")
+      // The redirect is now handled inside the signUp function in auth-context
     } catch (error: any) {
       console.error("Sign up error:", error)
       toast({
-        title: "Error",
-        description: error.message || "Failed to create account",
+        title: "Sign-up Error",
+        description:
+          error.message || "Failed to create account. The user may already exist or the password is too weak.",
         variant: "destructive",
       })
     } finally {
@@ -59,14 +49,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
       <div className="flex-1 flex items-center justify-center pt-16 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-            <CardDescription>Enter your information to get started with IntentIQ</CardDescription>
+            <CardDescription>Enter your information to start monitoring with ShadowStack</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -78,6 +68,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   value={formData.fullName}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -89,6 +80,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   value={formData.email}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -100,11 +92,18 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   value={formData.password}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company">Company (Optional)</Label>
-                <Input id="company" placeholder="Your Company" onChange={handleChange} value={formData.company} />
+                <Input
+                  id="company"
+                  placeholder="Your Company"
+                  onChange={handleChange}
+                  value={formData.company}
+                  disabled={isLoading}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">

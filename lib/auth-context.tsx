@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js"
+import { useRouter } from "next/navigation"
 
 interface AuthContextType {
   user: User | null
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -61,6 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    router.push("/dashboard")
+    router.refresh() // Ensures the layout re-renders with the new auth state
   }
 
   const signUp = async (email: string, password: string, fullName: string, company?: string) => {
@@ -72,11 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     })
     if (error) throw error
-    alert("Check your email for the confirmation link!")
+    // Redirect to a page that tells the user to confirm their email
+    router.push("/auth/confirm")
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    router.push("/")
   }
 
   const value = {
