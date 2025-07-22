@@ -1,13 +1,11 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
 // Mock Supabase for preview environment
 const isMockMode = typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net")
 
 // Environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ufmysxronjaohovgoecc.supabase.co"
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbXlzeHJvbmphb2hvdmdvZWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMDI0NzcsImV4cCI6MjAzMzg3ODQ3N30.Nh-hJRYGnQgxvdUEWwNgJN-kxTKyZXP5aQvmRsF-8QE"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 console.log("🔧 Supabase Configuration:")
 console.log("URL:", supabaseUrl)
@@ -106,41 +104,23 @@ const createMockClient = () => {
   }
 }
 
-// Use mock client in preview environment, real client otherwise
-export const supabase = isMockMode
-  ? (createMockClient() as any)
-  : createClient(supabaseUrl, supabaseAnonKey, {
+// Singleton pattern for the client
+let supabaseInstance: SupabaseClient | null = null
+
+export const getSupabase = (): SupabaseClient => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        flowType: "pkce",
-      },
-      global: {
-        headers: {
-          "X-Client-Info": "shadowstack-web",
-        },
       },
     })
-
-// Test connection only for real Supabase
-if (!isMockMode) {
-  supabase.auth
-    .getSession()
-    .then(({ data, error }) => {
-      if (error) {
-        console.error("❌ Supabase connection error:", error.message)
-      } else {
-        console.log("✅ Supabase connected successfully")
-        if (data.session) {
-          console.log("👤 Active session found for:", data.session.user.email)
-        }
-      }
-    })
-    .catch((error) => {
-      console.error("❌ Supabase initialization error:", error)
-    })
+  }
+  return supabaseInstance
 }
+
+export const supabase = getSupabase()
 
 // Server-side client for API routes
 export function createServerClient() {
