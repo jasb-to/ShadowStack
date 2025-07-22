@@ -192,7 +192,7 @@ export default function SignInPage() {
                   type="button"
                   onClick={handleDemoLogin}
                   disabled={isLoading}
-                  className="w-full"
+                  className="w-full bg-transparent"
                 >
                   {isLoading ? (
                     <>
