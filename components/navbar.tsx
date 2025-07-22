@@ -1,143 +1,101 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu, ShieldCheck } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { Shield, Menu, X } from "lucide-react"
+
+const navLinks = [
+  { href: "/#features", label: "Features" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+]
 
 export function Navbar() {
-  const router = useRouter()
   const pathname = usePathname()
-  const [mounted, setMounted] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  // Use auth hook
-  const { user, signOut, loading, isSignedIn } = useAuth()
-
-  // Only access auth after component mounts to avoid SSR issues
-  const [authState, setAuthState] = useState({
-    isSignedIn: false,
-    user: null as any,
-    loading: true,
-  })
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    setAuthState({
-      isSignedIn: !!user,
-      user: user,
-      loading: loading,
-    })
-  }, [user, loading])
-
-  const isAdminUser = user?.email === "jaspalbilkhu@gmail.com"
+  const { isSignedIn, signOut, isAdmin } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-black/80 backdrop-blur-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center justify-center" prefetch={false}>
-          <Shield className="h-6 w-6 text-cyan-400" />
-          <span className="ml-2 font-bold text-lg text-white">ShadowStack</span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-6">
-          <Link href="/#features" className="text-sm text-gray-300 hover:text-white">
-            Features
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <ShieldCheck className="h-6 w-6" />
+            <span className="hidden font-bold sm:inline-block">ShadowStack</span>
           </Link>
-          <Link href="/pricing" className="text-sm text-gray-300 hover:text-white" prefetch={false}>
-            Pricing
-          </Link>
-          <Link href="/about" className="text-sm text-gray-300 hover:text-white" prefetch={false}>
-            About
-          </Link>
-          <Link href="/contact" className="text-sm text-gray-300 hover:text-white" prefetch={false}>
-            Contact
-          </Link>
-        </nav>
-        <div className="flex items-center space-x-4">
-          {!loading &&
-            (isSignedIn ? (
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`transition-colors hover:text-foreground/80 ${pathname === link.href ? "text-foreground" : "text-foreground/60"}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="pr-0">
+            <Link href="/" className="mr-6 flex items-center space-x-2">
+              <ShieldCheck className="h-6 w-6" />
+              <span className="font-bold">ShadowStack</span>
+            </Link>
+            <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
+              <div className="flex flex-col space-y-3">
+                {navLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="text-muted-foreground">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">{/* You can add a search bar here if needed */}</div>
+          <nav className="flex items-center">
+            {isSignedIn ? (
               <>
-                <Button variant="outline" asChild>
-                  <Link href="/dashboard">Dashboard</Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost">Admin</Button>
+                  </Link>
+                )}
+                <Link href="/dashboard">
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+                <Button variant="ghost" onClick={signOut}>
+                  Sign Out
                 </Button>
-                <Button onClick={signOut}>Sign Out</Button>
               </>
             ) : (
-              <Button asChild>
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-            ))}
-          <ModeToggle />
-
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden text-slate-300 hover:text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+              <>
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button className="ml-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+          </nav>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-slate-900/95 backdrop-blur-md rounded-lg mt-2">
-            <Link
-              href="/#features"
-              className="block px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Features
-            </Link>
-            <Link
-              href="/pricing"
-              className="block px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/about"
-              className="block px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className="block px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            {!authState.isSignedIn && (
-              <div className="pt-2 space-y-2">
-                <Link
-                  href="/sign-in"
-                  className="block px-3 py-2 text-slate-300 hover:text-cyan-400 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="block px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg text-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   )
 }

@@ -39,19 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setLoading(true)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const isAdminUser = await checkAdminRole(session.user.id)
-        setIsAdmin(isAdminUser)
-      } else {
-        setIsAdmin(false)
-      }
-      setLoading(false)
-    })
+    const { subscription } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          const isAdminUser = await checkAdminRole(session.user.id)
+          setIsAdmin(isAdminUser)
+        } else {
+          setIsAdmin(false)
+        }
+        setLoading(false)
+      },
+    )
 
     return () => {
       if (subscription) {
@@ -73,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: { full_name: fullName, company_name: company },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     })
     if (error) throw error
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut()
     router.push("/")
+    router.refresh()
   }
 
   const value = {
