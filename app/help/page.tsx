@@ -1,12 +1,5 @@
 "use client"
-
-import { useState } from "react"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Search, BookOpen, Shield, Zap, Users, Settings, ChevronRight } from 'lucide-react'
-import Link from "next/link"
+import { BookOpen, Shield, Zap, Users, Settings } from "lucide-react"
 
 const helpSections = [
   {
@@ -1019,15 +1012,15 @@ Expected response:
         id: "webhook-format",
         title: "Webhook payload formats",
         content: `Understand webhook payloads for seamless integration:
-
-**Webhook Setup:**
-1. **Add Webhook URL** - Settings → Webhooks → Add Webhook
-2. **Choose Events** - Select which events to receive
-3. **Set Secret** - Optional secret for payload verification
+\
+**Webhook Setup:**\
+1. **Add Webhook URL** - Settings → Webhooks → Add Webhook\
+2. **Choose Events** - Select which events to receive\
+3. **Set Secret** - Optional secret for payload verification\
 4. **Test Webhook** - Send test payload to verify setup
-
+\
 **Supported Events:**
-- **alert.created** - New security alert generated
+- **alert.created** - New security alert generated\
 - **alert.updated** - Alert status or details changed
 - **wallet.added** - New wallet address added to monitoring
 - **wallet.removed** - Wallet address removed from monitoring
@@ -1054,18 +1047,18 @@ Expected response:
 - Signature Verification - Verify payloads using webhook secret
 - IP Whitelist - Webhooks sent from specific IP ranges
 - Retry Logic - Failed deliveries retried up to 5 times`
-      },
+},
       {
         id: "rate-limits",
         title: "Rate limits and best practices",
         content: `Optimize your API usage within rate limits:
 
 **Rate Limit Tiers:**
-- **Starter Plan:** 100 requests/hour (1.67/minute)
-- **Growth Plan:** 1,000 requests/hour (16.67/minute)
-- **Enterprise Plan:** 10,000 requests/hour (166.67/minute)
+- **Starter Plan:** 100 requests/hour (1.67/minute)\
+- **Growth Plan:** 1,000 requests/hour (16.67/minute)\
+- **Enterprise Plan:** 10,000 requests/hour (166.67/minute)\
 - **Burst Allowance:** 2x rate limit for 5-minute periods
-
+\
 **Rate Limit Headers:**
 Every API response includes rate limit information:
 \`\`\`
@@ -1093,14 +1086,14 @@ X-RateLimit-Retry-After: 3600
 **1. Implement Exponential Backoff:**
 \`\`\`javascript
 async function apiRequest(url, options, retries = 3) {
-  try {
+  try {\
     const response = await fetch(url, options);
-
-    if (response.status === 429) {
-      const retryAfter = response.headers.get('Retry-After');
+\
+    if (response.status === 429) {\
+      const retryAfter = response.headers.get(\'Retry-After\');\
       const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, 4 - retries) * 1000;
       
-      if (retries > 0) {
+      if (retries > 0) {\
         await new Promise(resolve => setTimeout(resolve, delay));
         return apiRequest(url, options, retries - 1);
       }
@@ -1108,7 +1101,7 @@ async function apiRequest(url, options, retries = 3) {
     
     return response;
   } catch (error) {
-    if (retries > 0) {
+    if (retries > 0) {\
       await new Promise(resolve => setTimeout(resolve, 1000));
       return apiRequest(url, options, retries - 1);
     }
@@ -1117,82 +1110,85 @@ async function apiRequest(url, options, retries = 3) {
 }
 \`\`\`
 
-**2. Batch Requests:**
+**2. Batch Requests:**\
 Instead of multiple single requests:
 \`\`\`javascript
 // Don't do this
 for (const walletId of walletIds) {
   await fetch(\`/api/wallets/\${walletId}\`);
 }
-
-// Do this instead
-const response = await fetch('/api/wallets/batch', {
-  method: 'POST',
+\
+// Do this instead\
+const response = await fetch(\'/api/wallets/batch', {
+  method: 'POST',\
   body: JSON.stringify({ wallet_ids: walletIds })
-});
+}
+)
 \`\`\`
-
+\
 **3. Use Pagination Efficiently:**
 \`\`\`javascript
 // Fetch all alerts efficiently
-async function getAllAlerts() {
-  const allAlerts = [];
-  let page = 1;
-  let hasMore = true;
-  
+async
+function getAllAlerts() {
+  const allAlerts = []
+  let page = 1
+  let hasMore = true
+
   while (hasMore) {
-    const response = await fetch(`/api/alerts?page=${page}&limit=100`);
-    const data = await response.json();
-    
-    allAlerts.push(...data.data);
-    hasMore = data.pagination.has_more;
-    page++;
-    
+    const response = await fetch(`/api/alerts?page=${page}&limit=100`)
+    const data = await response.json()
+
+    allAlerts.push(...data.data)
+    hasMore = data.pagination.has_more
+    page++
+
     // Respect rate limits
     if (hasMore) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
   }
-  
-  return allAlerts;
+
+  return allAlerts
 }
 \`\`\`
 
 **4. Cache Responses:**
 \`\`\`javascript
-const cache = new Map();
+const cache = new Map()
 
-async function getCachedData(endpoint, ttl = 300000) { // 5 minutes
-  const cached = cache.get(endpoint);
-  
+async function getCachedData(endpoint, ttl = 300000) {
+  // 5 minutes
+  const cached = cache.get(endpoint)
+
   if (cached && Date.now() - cached.timestamp < ttl) {
-    return cached.data;
+    return cached.data
   }
-  
-  const response = await fetch(endpoint);
-  const data = await response.json();
-  
+
+  const response = await fetch(endpoint)
+  const data = await response.json()
+
   cache.set(endpoint, {
     data,
-    timestamp: Date.now()
-  });
-  
-  return data;
+    timestamp: Date.now(),
+  })
+
+  return data
 }
 \`\`\`
 
 **5. Monitor Rate Limit Usage:**
 \`\`\`javascript
 function trackRateLimit(response) {
-  const limit = response.headers.get('X-RateLimit-Limit');
-  const remaining = response.headers.get('X-RateLimit-Remaining');
-  const reset = response.headers.get('X-RateLimit-Reset');
-  
-  console.log(`Rate limit: ${remaining}/${limit}, resets at ${new Date(reset * 1000)}`);
-  
+  const limit = response.headers.get("X-RateLimit-Limit")
+  const remaining = response.headers.get("X-RateLimit-Remaining")
+  const reset = response.headers.get("X-RateLimit-Reset")
+
+  console.log(`Rate limit: ${remaining}/${limit}, resets at ${new Date(reset * 1000)}`)
+
   // Alert when approaching limit
   if (remaining < limit * 0.1) {
-    console.warn('Approaching rate limit!');
+    console.warn("Approaching rate limit!")
   }
 }
 \`\`\`
@@ -1205,9 +1201,12 @@ function trackRateLimit(response) {
 - **DELETE /wallets** - 0.5x standard rate limit
 
 **Rate Limit Optimization:**
-- **Use webhooks** instead of polling for real-time data
-- **Implement caching** for frequently accessed data
-- **Batch operations** when possible
+- **Use webhooks** instead of polling
+for real-time data\
+- **Implement caching**
+for frequently accessed data
+\
+- **Batch operations** when possible\
 - **Use appropriate page sizes** (50-100 items per page)
 - **Monitor usage** in dashboard
 
@@ -1223,156 +1222,174 @@ Dashboard shows:
 - Historical usage patterns
 - Peak usage times
 - Rate limit violations
-- Recommendations for optimization
+- Recommendations
+for optimization
 
-**Troubleshooting:**
-- **Unexpected 429s** - Check for concurrent requests
-- **Slow Responses** - May indicate approaching limits
-- **Failed Webhooks** - Don't count against rate limits
+**Troubleshooting
+:**\
+- **Unexpected 429s** - Check
+for concurrent requests\
+- **Slow Responses** - May
+indicate
+approaching
+limits
+- **Failed
+Webhooks ** -Don
+'t count against rate limits
 - **Cache Misses** - Frequent cache misses increase API usage
 - **Batch Size** - Too small batches waste requests
 
 **Getting Help:**
-- Contact support for rate limit increases
-- Review usage patterns in dashboard
-- Optimize code with our SDK libraries
-- Schedule high-volume operations during off-peak hours`
+- Contact support
+for rate limit increases
+- Review usage
+patterns in dashboard - Optimize
+code
+with our SDK
+libraries - Schedule
+high - volume
+operations
+during
+off - peak
+hours`
       },
       {
         id: "examples",
         title: "Custom integration examples",
-        content: `Real-world integration examples for common use cases:
+        content: `
+Real - world
+integration
+examples
+for common use cases
+:
 
 **1. Slack Alert Bot:**
 \`\`\`javascript
-const { WebClient } = require('@slack/web-api');
-const express = require('express');
-const crypto = require('crypto');
+const { WebClient } = require("@slack/web-api")
+const express = require("express")
+const crypto = require("crypto")
 
-const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
-const app = express();
+const slack = new WebClient(process.env.SLACK_BOT_TOKEN)
+const app = express()
 
-app.use(express.json());
+app.use(express.json())
 
 // Webhook endpoint for ShadowStack alerts
-app.post('/webhook/shadowstack', (req, res) => {
+app.post("/webhook/shadowstack", (req, res) => {
   // Verify webhook signature
-  const signature = req.headers['x-shadowstack-signature'];
-  const payload = JSON.stringify(req.body);
-  
+  const signature = req.headers["x-shadowstack-signature"]
+  const payload = JSON.stringify(req.body)
+
   if (!verifySignature(payload, signature)) {
-    return res.status(401).send('Unauthorized');
+    return res.status(401).send("Unauthorized")
   }
-  
-  const { event, data } = req.body;
-  
-  if (event === 'alert.created') {
-    sendSlackAlert(data);
+
+  const { event, data } = req.body
+
+  if (event === "alert.created") {
+    sendSlackAlert(data)
   }
-  
-  res.status(200).send('OK');
-});
+
+  res.status(200).send("OK")
+})
 
 async function sendSlackAlert(alert) {
   const color = {
-    critical: '#FF0000',
-    high: '#FF8C00',
-    medium: '#FFD700',
-    low: '#00CED1'
-  }[alert.severity];
-  
+    critical: "#FF0000",
+    high: "#FF8C00",
+    medium: "#FFD700",
+    low: "#00CED1",
+  }[alert.severity]
+
   const blocks = [
     {
-      type: 'header',
+      type: "header",
       text: {
-        type: 'plain_text',
-        text: `🚨 ${alert.severity.toUpperCase()} Security Alert`
-      }
+        type: "plain_text",
+        text: `🚨 ${alert.severity.toUpperCase()} Security Alert`,
+      },
     },
     {
-      type: 'section',
+      type: "section",
       text: {
-        type: 'mrkdwn',
-        text: `*${alert.title}*\\n${alert.description}`
-      }
+        type: "mrkdwn",
+        text: `*${alert.title}*\\n${alert.description}`,
+      },
     },
     {
-      type: 'section',
+      type: "section",
       fields: [
         {
-          type: 'mrkdwn',
-          text: `*Wallet:*\\n${alert.wallet_label}`
+          type: "mrkdwn",
+          text: `*Wallet:*\\n${alert.wallet_label}`,
         },
         {
-          type: 'mrkdwn',
-          text: `*Confidence:*\\n${alert.confidence}%`
-        }
-      ]
+          type: "mrkdwn",
+          text: `*Confidence:*\\n${alert.confidence}%`,
+        },
+      ],
     },
     {
-      type: 'actions',
+      type: "actions",
       elements: [
         {
-          type: 'button',
-          text: { type: 'plain_text', text: 'Acknowledge' },
-          style: 'primary',
+          type: "button",
+          text: { type: "plain_text", text: "Acknowledge" },
+          style: "primary",
           value: alert.alert_id,
-          action_id: 'acknowledge_alert'
+          action_id: "acknowledge_alert",
         },
         {
-          type: 'button',
-          text: { type: 'plain_text', text: 'View Details' },
-          url: `https://dashboard.shadowstack.com/alerts/${alert.alert_id}`
-        }
-      ]
-    }
-  ];
-  
+          type: "button",
+          text: { type: "plain_text", text: "View Details" },
+          url: `https://dashboard.shadowstack.com/alerts/${alert.alert_id}`,
+        },
+      ],
+    },
+  ]
+
   await slack.chat.postMessage({
-    channel: '#security-alerts',
-    attachments: [{ color, blocks }]
-  });
+    channel: "#security-alerts",
+    attachments: [{ color, blocks }],
+  })
 }
 
 function verifySignature(payload, signature) {
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(`sha256=${expectedSignature}`)
-  );
+  const expectedSignature = crypto.createHmac("sha256", process.env.WEBHOOK_SECRET).update(payload).digest("hex")
+
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(`sha256=${expectedSignature}`))
 }
 
-app.listen(3000);
+app.listen(3000)
 \`\`\`
 
 **2. Email Alert System:**
 \`\`\`python
 import requests
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify
-import hmac
-import hashlib
-
-app = Flask(__name__)
+from
+email.mime.text
+email.mime.multipart
+flask
+import Flask,
+request, jsonify
+= Flask(__name__)
 
 @app.route('/webhook/shadowstack', methods=['POST'])
-def handle_webhook():
+def
+handle_webhook()
+:
     # Verify signature
     signature = request.headers.get('X-ShadowStack-Signature')
     payload = request.get_data()
-    
-    if not verify_signature(payload, signature):
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    data = request.json
-    
-    if data['event'] == 'alert.created') {
+
+if not verify_signature(payload, signature)
+:
+return jsonify({'error': 'Unauthorized'}), 401
+
+data = request.json
+
+if data['event'] == 'alert.created') {
         send_email_alert(data)
     
     return jsonify({'status': 'success'}), 200
@@ -1394,22 +1411,18 @@ def send_email_alert(alert_data):
     
     text = f"""\\
     ShadowStack Security Alert
-    Severity: {alert_data['severity']}
-    Title: {alert_data['title']}
-    Description: {alert_data['description']}
-    Wallet: {alert_data['wallet_label']}
-    Confidence: {alert_data['confidence']}%
+    Severity: alert_data['severity']alert_data['title']alert_data['description']alert_data['wallet_label']alert_data['confidence']%
     """
     
     html = f"""\\
     <html>
       <body>
         <p>ShadowStack Security Alert</p>
-        <p><strong>Severity:</strong> {alert_data['severity']}</p>
+        <p><strong>Severity:</strong> alert_data['severity']</p>
         <p><strong>Title:</strong> {alert_data['title']}</p>
-        <p><strong>Description:</strong> {alert_data['description']}</p>
+        <p><strong>Description:</strong> alert_data['description']</p>
         <p><strong>Wallet:</strong> {alert_data['wallet_label']}</p>
-        <p><strong>Confidence:</strong> {alert_data['confidence']}%</p>
+        <p><strong>Confidence:</strong> alert_data['confidence']%</p>
       </body>
     </html>
     """
@@ -1441,10 +1454,7 @@ if __name__ == '__main__':
 import requests
 import json
 from flask import Flask, request, jsonify
-import hmac
-import hashlib
-
-app = Flask(__name__)
+import hmac= Flask(__name__)
 
 @app.route('/webhook/shadowstack', methods=['POST'])
 def handle_webhook():
@@ -1479,10 +1489,9 @@ def send_to_splunk(event):
     splunk_url = app.config['SPLUNK_HEC_URL']
     splunk_token = app.config['SPLUNK_HEC_TOKEN']
     
-    headers = {
+    headers = 
         "Authorization": f"Splunk {splunk_token}",
         "Content-Type": "application/json"
-    }
     
     try:
         response = requests.post(splunk_url, data=json.dumps(event), headers=headers, verify=False)
@@ -1570,7 +1579,7 @@ export default function HelpPage() {
                 <ul>
                   {section.articles.map((article) => (
                     <li key={article.id} className="mb-2">
-                      <Link href={`#${article.id}`} className="flex items-center hover:text-indigo-500">
+                      <Link href={`#$article.id`} className="flex items-center hover:text-indigo-500">
                         <ChevronRight className="mr-2 h-4 w-4 text-gray-400" />
                         {article.title}
                       </Link>

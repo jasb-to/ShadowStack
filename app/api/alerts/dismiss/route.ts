@@ -1,41 +1,49 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
-    const { walletAddress, alertType } = await request.json()
+    const { alert_id, type } = await request.json()
 
-    if (!walletAddress || !alertType) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!alert_id || !type) {
+      return NextResponse.json({ error: "Missing alert_id or type" }, { status: 400 })
     }
 
-    const supabase = createServerClient()
+    if (type === "ai") {
+      // Dismiss AI alert
+      const { error } = await supabase
+        .from("ai_alerts")
+        .update({
+          dismissed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", alert_id)
 
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+      if (error) {
+        console.error("Error dismissing AI alert:", error)
+        return NextResponse.json({ error: "Failed to dismiss alert" }, { status: 500 })
+      }
+    } else {
+      // Handle regular alerts (if needed)
+      const { error } = await supabase
+        .from("alerts")
+        .update({
+          dismissed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", alert_id)
 
-    // Mark alerts as read
-    const { error } = await supabase
-      .from("alerts")
-      .update({ is_read: true })
-      .eq("user_id", user.id)
-      .eq("target_id", walletAddress)
-      .eq("source_channel", alertType)
-      .eq("is_read", false)
-
-    if (error) {
-      throw error
+      if (error) {
+        console.error("Error dismissing alert:", error)
+        return NextResponse.json({ error: "Failed to dismiss alert" }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error dismissing alert:", error)
+    console.error("Error in dismiss alert API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
