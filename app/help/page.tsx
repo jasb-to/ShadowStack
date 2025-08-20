@@ -1,5 +1,11 @@
 "use client"
-import { BookOpen, Shield, Zap, Users, Settings } from "lucide-react"
+import { useState } from "react"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Search, BookOpen, Shield, Zap, Users, Settings, ChevronRight } from "lucide-react"
+import Link from "next/link"
 
 const helpSections = [
   {
@@ -1027,6 +1033,7 @@ Expected response:
 - **monitoring.status** - Monitoring status changes
 
 **Alert Created Payload:**
+\`\`\`json
 {
   "event": "alert.created",
   "timestamp": "2024-01-15T10:30:00Z",
@@ -1041,6 +1048,7 @@ Expected response:
     "confidence": 95
   }
 }
+\`\`\`
 
 **Webhook Security:**
 - HTTPS Required - All webhook URLs must use HTTPS
@@ -1306,14 +1314,14 @@ async function sendSlackAlert(alert) {
       type: "header",
       text: {
         type: "plain_text",
-        text: `🚨 ${alert.severity.toUpperCase()} Security Alert`,
+        text: \`🚨 \${alert.severity.toUpperCase()} Security Alert\`,
       },
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*${alert.title}*\\n${alert.description}`,
+        text: \`*\${alert.title}*\\n\${alert.description}\`,
       },
     },
     {
@@ -1321,11 +1329,11 @@ async function sendSlackAlert(alert) {
       fields: [
         {
           type: "mrkdwn",
-          text: `*Wallet:*\\n${alert.wallet_label}`,
+          text: \`*Wallet:*\\n\${alert.wallet_label}\`,
         },
         {
           type: "mrkdwn",
-          text: `*Confidence:*\\n${alert.confidence}%`,
+          text: \`*Confidence:*\\n\${alert.confidence}%\`,
         },
       ],
     },
@@ -1342,7 +1350,7 @@ async function sendSlackAlert(alert) {
         {
           type: "button",
           text: { type: "plain_text", text: "View Details" },
-          url: `https://dashboard.shadowstack.com/alerts/${alert.alert_id}`,
+          url: \`https://dashboard.shadowstack.com/alerts/\${alert.alert_id}\`,
         },
       ],
     },
@@ -1357,7 +1365,7 @@ async function sendSlackAlert(alert) {
 function verifySignature(payload, signature) {
   const expectedSignature = crypto.createHmac("sha256", process.env.WEBHOOK_SECRET).update(payload).digest("hex")
 
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(`sha256=${expectedSignature}`))
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(\`sha256=\${expectedSignature}\`))
 }
 
 app.listen(3000)
@@ -1367,29 +1375,24 @@ app.listen(3000)
 \`\`\`python
 import requests
 import smtplib
-from
-email.mime.text
-email.mime.multipart
-flask
-import Flask,
-request, jsonify
-= Flask(__name__)
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from flask import Flask, request, jsonify
+import Flask, request, jsonify
+app = Flask(__name__)
 
 @app.route('/webhook/shadowstack', methods=['POST'])
-def
-handle_webhook()
-:
+def handle_webhook():
     # Verify signature
     signature = request.headers.get('X-ShadowStack-Signature')
     payload = request.get_data()
 
-if not verify_signature(payload, signature)
-:
-return jsonify({'error': 'Unauthorized'}), 401
+    if not verify_signature(payload, signature):
+        return jsonify({'error': 'Unauthorized'}), 401
 
-data = request.json
+    data = request.json
 
-if data['event'] == 'alert.created') {
+    if data['event'] == 'alert.created':
         send_email_alert(data)
     
     return jsonify({'status': 'success'}), 200
@@ -1411,18 +1414,22 @@ def send_email_alert(alert_data):
     
     text = f"""\\
     ShadowStack Security Alert
-    Severity: alert_data['severity']alert_data['title']alert_data['description']alert_data['wallet_label']alert_data['confidence']%
+    Severity: {alert_data['severity']}
+    Title: {alert_data['title']}
+    Description: {alert_data['description']}
+    Wallet: {alert_data['wallet_label']}
+    Confidence: {alert_data['confidence']}%
     """
     
     html = f"""\\
     <html>
       <body>
         <p>ShadowStack Security Alert</p>
-        <p><strong>Severity:</strong> alert_data['severity']</p>
+        <p><strong>Severity:</strong> {alert_data['severity']}</p>
         <p><strong>Title:</strong> {alert_data['title']}</p>
-        <p><strong>Description:</strong> alert_data['description']</p>
+        <p><strong>Description:</strong> {alert_data['description']}</p>
         <p><strong>Wallet:</strong> {alert_data['wallet_label']}</p>
-        <p><strong>Confidence:</strong> alert_data['confidence']%</p>
+        <p><strong>Confidence:</strong> {alert_data['confidence']}%</p>
       </body>
     </html>
     """
@@ -1454,7 +1461,8 @@ if __name__ == '__main__':
 import requests
 import json
 from flask import Flask, request, jsonify
-import hmac= Flask(__name__)
+import hmac
+app = Flask(__name__)
 
 @app.route('/webhook/shadowstack', methods=['POST'])
 def handle_webhook():
@@ -1489,9 +1497,10 @@ def send_to_splunk(event):
     splunk_url = app.config['SPLUNK_HEC_URL']
     splunk_token = app.config['SPLUNK_HEC_TOKEN']
     
-    headers = 
+    headers = {
         "Authorization": f"Splunk {splunk_token}",
         "Content-Type": "application/json"
+    }
     
     try:
         response = requests.post(splunk_url, data=json.dumps(event), headers=headers, verify=False)
@@ -1531,19 +1540,23 @@ Analyze transaction patterns and wallet activity using ShadowStack data.
 These examples demonstrate the flexibility of the ShadowStack API and webhooks for building custom integrations to meet your specific security needs. Remember to follow security best practices when implementing these integrations, including proper authentication, signature verification, and error handling.`
       }
     ]
-  },
+}
+,
 ]
 
 export default function HelpPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredSections = helpSections.map(section => ({
-    ...section,
-    articles: section.articles.filter(article =>
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })).filter(section => section.articles.length > 0)
+  const filteredSections = helpSections
+    .map((section) => ({
+      ...section,
+      articles: section.articles.filter(
+        (article) =>
+          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.content.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    }))
+    .filter((section) => section.articles.length > 0)
 
   return (
     <>
@@ -1579,7 +1592,7 @@ export default function HelpPage() {
                 <ul>
                   {section.articles.map((article) => (
                     <li key={article.id} className="mb-2">
-                      <Link href={`#$article.id`} className="flex items-center hover:text-indigo-500">
+                      <Link href={`#${article.id}`} className="flex items-center hover:text-indigo-500">
                         <ChevronRight className="mr-2 h-4 w-4 text-gray-400" />
                         {article.title}
                       </Link>
