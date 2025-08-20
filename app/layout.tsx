@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "ShadowStack - Real-Time Cybersecurity",
   description: "Real-time threat detection, AI-powered monitoring, and zero-config protection for your digital assets.",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

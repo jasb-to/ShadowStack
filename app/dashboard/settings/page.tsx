@@ -1,352 +1,308 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { useAuth } from "@/lib/auth-context"
-import { supabase } from "@/lib/supabase"
+import { Badge } from "@/components/ui/badge"
+import { Brain, Mail, Bell, Shield, User, Webhook } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { Bell, Webhook, User, Save } from "lucide-react"
-
-interface NotificationPreferences {
-  email_alerts: boolean
-  min_severity_for_email: "critical" | "high" | "medium" | "low"
-  webhook_alerts: boolean
-}
-
-interface UserProfile {
-  full_name?: string
-  company_name?: string
-  subscription_tier: string
-  subscription_status: string
-}
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SettingsPage() {
-  const router = useRouter()
-  const { isSignedIn, user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-
-  const [profile, setProfile] = useState<UserProfile>({
-    full_name: "",
-    company_name: "",
-    subscription_tier: "none",
-    subscription_status: "inactive",
-  })
-
-  const [notifications, setNotifications] = useState<NotificationPreferences>({
+  const [loading, setLoading] = useState(false)
+  const [settings, setSettings] = useState({
     email_alerts: true,
-    min_severity_for_email: "medium",
-    webhook_alerts: false,
+    slack_notifications: false,
+    discord_notifications: false,
+    webhook_url: "",
+    ai_enabled: false, // New AI setting
   })
 
-  const [webhookUrl, setWebhookUrl] = useState("")
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    if (!isSignedIn) {
-      router.push("/sign-in")
-      return
-    }
-    fetchSettings()
-  }, [isSignedIn, router])
+    loadSettings()
+  }, [])
 
-  const fetchSettings = async () => {
+  const loadSettings = async () => {
     try {
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
         .from("user_profiles")
-        .select("*")
-        .eq("id", user?.id)
+        .select("email_alerts, slack_notifications, discord_notifications, webhook_url, ai_enabled")
+        .eq("id", user.id)
         .single()
 
-      if (profileError && profileError.code !== "PGRST116") {
-        throw profileError
+      if (data) {
+        setSettings(data)
       }
+    } catch (error) {
+      console.error("Error loading settings:", error)
+    }
+  }
 
-      if (profileData) {
-        setProfile(profileData)
-      }
+  const saveSettings = async () => {
+    setLoading(true)
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
 
-      // Fetch notification preferences
-      const { data: notifData, error: notifError } = await supabase
-        .from("notification_preferences")
-        .select("*")
-        .eq("user_id", user?.id)
-        .single()
+      const { error } = await supabase.from("user_profiles").update(settings).eq("id", user.id)
 
-      if (notifError && notifError.code !== "PGRST116") {
-        throw notifError
-      }
+      if (error) throw error
 
-      if (notifData) {
-        setNotifications({
-          email_alerts: notifData.email_alerts,
-          min_severity_for_email: notifData.min_severity_for_email,
-          webhook_alerts: notifData.webhook_alerts,
-        })
-      }
-
-      // Fetch webhook integration
-      const { data: webhookData, error: webhookError } = await supabase
-        .from("user_integrations")
-        .select("config")
-        .eq("user_id", user?.id)
-        .eq("integration_type", "webhook")
-        .single()
-
-      if (webhookData?.config?.url) {
-        setWebhookUrl(webhookData.config.url)
-      }
-    } catch (error: any) {
-      console.error("Error fetching settings:", error)
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated successfully.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const saveProfile = async () => {
-    setSaving(true)
-    try {
-      const { error } = await supabase.from("user_profiles").upsert({
-        id: user?.id,
-        email: user?.email,
-        full_name: profile.full_name,
-        company_name: profile.company_name,
-        subscription_tier: profile.subscription_tier,
-        subscription_status: profile.subscription_status,
-      })
-
-      if (error) throw error
-      toast({ title: "Success", description: "Profile updated successfully" })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile",
-        variant: "destructive",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const saveNotifications = async () => {
-    setSaving(true)
-    try {
-      const { error } = await supabase.from("notification_preferences").upsert({
-        user_id: user?.id,
-        ...notifications,
-      })
-
-      if (error) throw error
-      toast({ title: "Success", description: "Notification preferences updated" })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update notifications",
-        variant: "destructive",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const saveWebhook = async () => {
-    setSaving(true)
-    try {
-      if (webhookUrl) {
-        const { error } = await supabase.from("user_integrations").upsert({
-          user_id: user?.id,
-          integration_type: "webhook",
-          config: { url: webhookUrl },
-          is_active: notifications.webhook_alerts,
-        })
-
-        if (error) throw error
-      }
-
-      toast({ title: "Success", description: "Webhook settings updated" })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update webhook",
-        variant: "destructive",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (!isSignedIn) return null
-
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <div className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Settings</h1>
-            <p className="text-muted-foreground">Manage your account preferences and notification settings</p>
-          </div>
-
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="profile" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Profile Information
-                  </CardTitle>
-                  <CardDescription>Update your personal information and account details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name">Full Name</Label>
-                      <Input
-                        id="full_name"
-                        value={profile.full_name || ""}
-                        onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                        placeholder="John Doe"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company_name">Company Name</Label>
-                      <Input
-                        id="company_name"
-                        value={profile.company_name || ""}
-                        onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                        placeholder="Your Company"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
-                    <p className="text-xs text-muted-foreground">Email cannot be changed. Contact support if needed.</p>
-                  </div>
-
-                  <Button onClick={saveProfile} disabled={saving}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {saving ? "Saving..." : "Save Profile"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notifications" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Notification Preferences
-                  </CardTitle>
-                  <CardDescription>Configure how and when you receive security alerts</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Email Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Receive security alerts via email</p>
-                    </div>
-                    <Switch
-                      checked={notifications.email_alerts}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, email_alerts: checked })}
-                    />
-                  </div>
-
-                  {notifications.email_alerts && (
-                    <div className="space-y-2">
-                      <Label htmlFor="min_severity">Minimum Severity for Email</Label>
-                      <Select
-                        value={notifications.min_severity_for_email}
-                        onValueChange={(value: any) =>
-                          setNotifications({ ...notifications, min_severity_for_email: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low and above</SelectItem>
-                          <SelectItem value="medium">Medium and above</SelectItem>
-                          <SelectItem value="high">High and above</SelectItem>
-                          <SelectItem value="critical">Critical only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Webhook Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Send alerts to your webhook endpoint</p>
-                    </div>
-                    <Switch
-                      checked={notifications.webhook_alerts}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, webhook_alerts: checked })}
-                    />
-                  </div>
-
-                  <Button onClick={saveNotifications} disabled={saving}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {saving ? "Saving..." : "Save Notifications"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="integrations" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Webhook className="h-5 w-5" />
-                    Webhook Integration
-                  </CardTitle>
-                  <CardDescription>Configure webhook endpoints to receive real-time alerts</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="webhook_url">Webhook URL</Label>
-                    <Input
-                      id="webhook_url"
-                      value={webhookUrl}
-                      onChange={(e) => setWebhookUrl(e.target.value)}
-                      placeholder="https://your-app.com/webhook/shadowstack"
-                      type="url"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      We'll send POST requests to this URL when alerts are triggered
-                    </p>
-                  </div>
-
-                  <Button onClick={saveWebhook} disabled={saving}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {saving ? "Saving..." : "Save Webhook"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+        <p className="text-slate-400">Manage your account preferences and notifications</p>
       </div>
 
-      <Footer />
+      <Tabs defaultValue="notifications" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-800">
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            AI Features
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profile
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email Notifications
+              </CardTitle>
+              <CardDescription>Configure how you receive alerts via email</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-white">Email Alerts</Label>
+                  <p className="text-sm text-slate-400">Receive breach alerts via email</p>
+                </div>
+                <Switch
+                  checked={settings.email_alerts}
+                  onCheckedChange={(checked) => setSettings({ ...settings, email_alerts: checked })}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Webhook className="h-5 w-5" />
+                Webhook Integrations
+              </CardTitle>
+              <CardDescription>Connect with external services</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-white">Slack Notifications</Label>
+                  <p className="text-sm text-slate-400">Send alerts to Slack channels</p>
+                </div>
+                <Switch
+                  checked={settings.slack_notifications}
+                  onCheckedChange={(checked) => setSettings({ ...settings, slack_notifications: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-white">Discord Notifications</Label>
+                  <p className="text-sm text-slate-400">Send alerts to Discord channels</p>
+                </div>
+                <Switch
+                  checked={settings.discord_notifications}
+                  onCheckedChange={(checked) => setSettings({ ...settings, discord_notifications: checked })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="webhook" className="text-white">
+                  Custom Webhook URL
+                </Label>
+                <Input
+                  id="webhook"
+                  placeholder="https://your-webhook-url.com/alerts"
+                  value={settings.webhook_url}
+                  onChange={(e) => setSettings({ ...settings, webhook_url: e.target.value })}
+                  className="bg-slate-800 border-slate-600 text-white"
+                />
+                <p className="text-sm text-slate-400">Optional: Send alerts to your custom endpoint</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai" className="space-y-6">
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-400" />
+                AI Anomaly Detection
+                <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                  Free Beta
+                </Badge>
+              </CardTitle>
+              <CardDescription>Advanced AI-powered anomaly detection for your wallet transactions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-white">Enable AI Anomaly Detection</Label>
+                  <p className="text-sm text-slate-400">Use machine learning to detect unusual transaction patterns</p>
+                </div>
+                <Switch
+                  checked={settings.ai_enabled}
+                  onCheckedChange={(checked) => setSettings({ ...settings, ai_enabled: checked })}
+                />
+              </div>
+
+              {settings.ai_enabled && (
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 space-y-3">
+                  <h4 className="text-white font-medium flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-purple-400" />
+                    AI Features Enabled
+                  </h4>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                    <li>• Real-time transaction anomaly detection</li>
+                    <li>• AI-generated security summaries</li>
+                    <li>• Pattern recognition for unusual activity</li>
+                    <li>• Smart alert prioritization</li>
+                  </ul>
+                  <p className="text-xs text-purple-300">
+                    Powered by Hugging Face AI models. No additional charges during beta.
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-slate-800 border border-slate-600 rounded-lg p-4">
+                <h4 className="text-white font-medium mb-2">How AI Detection Works</h4>
+                <div className="text-sm text-slate-400 space-y-2">
+                  <p>
+                    Our AI system analyzes your wallet's transaction history to build a baseline of normal activity.
+                  </p>
+                  <p>
+                    When new transactions occur, the AI compares them against this baseline to detect anomalies such as:
+                  </p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li>Unusual transaction amounts</li>
+                    <li>Transactions at unexpected times</li>
+                    <li>Rapid succession of transactions</li>
+                    <li>Interactions with flagged addresses</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security Settings
+              </CardTitle>
+              <CardDescription>Manage your account security preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white">Two-Factor Authentication</Label>
+                <p className="text-sm text-slate-400">Add an extra layer of security to your account</p>
+                <Button variant="outline" className="bg-slate-800 border-slate-600 text-white">
+                  Enable 2FA
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white">API Keys</Label>
+                <p className="text-sm text-slate-400">Manage API access to your account</p>
+                <Button variant="outline" className="bg-slate-800 border-slate-600 text-white">
+                  Manage API Keys
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="profile" className="space-y-6">
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Information
+              </CardTitle>
+              <CardDescription>Update your personal information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-white">
+                  Full Name
+                </Label>
+                <Input id="name" placeholder="Your full name" className="bg-slate-800 border-slate-600 text-white" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company" className="text-white">
+                  Company
+                </Label>
+                <Input
+                  id="company"
+                  placeholder="Your company name"
+                  className="bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex justify-end">
+        <Button onClick={saveSettings} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+          {loading ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
     </div>
   )
 }

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, MapPin, MessageSquare, Phone } from "lucide-react"
+import { Mail, MapPin, MessageSquare, Building2 } from "lucide-react"
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -60,62 +60,52 @@ export default function ContactPage() {
 
   const startLiveChat = () => {
     // Simple implementation - in production you'd integrate with a chat service like Intercom, Zendesk, etc.
-    alert("Live chat feature coming soon! Please email us at support@shadowstack.site for immediate assistance.")
+    alert("Live chat feature coming soon! Please email us at info@shadowsignals.live for immediate assistance.")
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
 
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Get in Touch</h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Building2 className="w-6 h-6 text-emerald-400" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent">
+              Get in Touch
+            </h1>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
               Have questions about ShadowStack? Our team is here to help you secure your digital assets.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="md:col-span-1 space-y-6">
-              <Card>
+              <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="pt-6">
                   <div className="flex items-start space-x-4">
-                    <Mail className="h-6 w-6 text-primary mt-1" />
+                    <Mail className="h-6 w-6 text-emerald-400 mt-1" />
                     <div>
-                      <h3 className="font-medium">Email Us</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Our team will respond within 24 hours</p>
-                      <a href="mailto:support@shadowstack.site" className="text-primary hover:underline mt-2 block">
-                        support@shadowstack.site
+                      <h3 className="font-medium text-white">Email Us</h3>
+                      <p className="text-sm text-slate-300 mt-1">Our team will respond within 24 hours</p>
+                      <a href="mailto:info@shadowsignals.live" className="text-emerald-400 hover:underline mt-2 block">
+                        info@shadowsignals.live
                       </a>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="pt-6">
                   <div className="flex items-start space-x-4">
-                    <Phone className="h-6 w-6 text-primary mt-1" />
+                    <MapPin className="h-6 w-6 text-emerald-400 mt-1" />
                     <div>
-                      <h3 className="font-medium">Call Us</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Monday to Friday, 9am-6pm GMT</p>
-                      <a href="tel:+441234567890" className="text-primary hover:underline mt-2 block">
-                        +44 (0) 123 456 7890
-                      </a>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start space-x-4">
-                    <MapPin className="h-6 w-6 text-primary mt-1" />
-                    <div>
-                      <h3 className="font-medium">Visit Us</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Our headquarters</p>
-                      <address className="not-italic text-sm mt-2">
+                      <h3 className="font-medium text-white">Visit Us</h3>
+                      <p className="text-sm text-slate-300 mt-1">Our headquarters</p>
+                      <address className="not-italic text-sm mt-2 text-slate-300">
                         Birmingham City Centre
                         <br />
                         West Midlands
@@ -127,14 +117,14 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="pt-6">
                   <div className="flex items-start space-x-4">
-                    <MessageSquare className="h-6 w-6 text-primary mt-1" />
+                    <MessageSquare className="h-6 w-6 text-emerald-400 mt-1" />
                     <div>
-                      <h3 className="font-medium">Live Chat</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Chat with our support team</p>
-                      <Button variant="link" className="p-0 h-auto mt-2" onClick={startLiveChat}>
+                      <h3 className="font-medium text-white">Live Chat</h3>
+                      <p className="text-sm text-slate-300 mt-1">Chat with our support team</p>
+                      <Button variant="link" className="p-0 h-auto mt-2 text-emerald-400" onClick={startLiveChat}>
                         Start a conversation
                       </Button>
                     </div>
@@ -144,19 +134,19 @@ export default function ContactPage() {
             </div>
 
             <div className="md:col-span-2">
-              <Card>
+              <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle>Send us a message</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-white">Send us a message</CardTitle>
+                  <CardDescription className="text-slate-300">
                     Fill out the form below and we'll get back to you as soon as possible.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {submitted ? (
                     <div className="text-center py-8">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
                         <svg
-                          className="w-8 h-8 text-green-600"
+                          className="w-8 h-8 text-emerald-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -165,11 +155,14 @@ export default function ContactPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                       </div>
-                      <h3 className="text-xl font-medium mb-2">Message Sent!</h3>
-                      <p className="text-muted-foreground">
+                      <h3 className="text-xl font-medium mb-2 text-white">Message Sent!</h3>
+                      <p className="text-slate-300">
                         Thank you for contacting us. We'll get back to you within 24 hours.
                       </p>
-                      <Button className="mt-6" onClick={() => setSubmitted(false)}>
+                      <Button
+                        className="mt-6 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                        onClick={() => setSubmitted(false)}
+                      >
                         Send Another Message
                       </Button>
                     </div>
@@ -177,17 +170,22 @@ export default function ContactPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="name">Full Name *</Label>
+                          <Label htmlFor="name" className="text-white">
+                            Full Name *
+                          </Label>
                           <Input
                             id="name"
                             placeholder="John Doe"
                             required
                             value={formData.name}
                             onChange={(e) => handleInputChange("name", e.target.value)}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email *</Label>
+                          <Label htmlFor="email" className="text-white">
+                            Email *
+                          </Label>
                           <Input
                             id="email"
                             type="email"
@@ -195,27 +193,33 @@ export default function ContactPage() {
                             required
                             value={formData.email}
                             onChange={(e) => handleInputChange("email", e.target.value)}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor="company">Company (Optional)</Label>
+                          <Label htmlFor="company" className="text-white">
+                            Company (Optional)
+                          </Label>
                           <Input
                             id="company"
                             placeholder="Your Company"
                             value={formData.company}
                             onChange={(e) => handleInputChange("company", e.target.value)}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="subject">Subject *</Label>
+                          <Label htmlFor="subject" className="text-white">
+                            Subject *
+                          </Label>
                           <Select onValueChange={(value) => handleInputChange("subject", value)}>
-                            <SelectTrigger id="subject">
+                            <SelectTrigger id="subject" className="bg-slate-700 border-slate-600 text-white">
                               <SelectValue placeholder="Select a subject" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-slate-700 border-slate-600">
                               <SelectItem value="general">General Inquiry</SelectItem>
                               <SelectItem value="sales">Sales Question</SelectItem>
                               <SelectItem value="support">Technical Support</SelectItem>
@@ -228,7 +232,9 @@ export default function ContactPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="message">Message *</Label>
+                        <Label htmlFor="message" className="text-white">
+                          Message *
+                        </Label>
                         <Textarea
                           id="message"
                           placeholder="How can we help you?"
@@ -236,12 +242,13 @@ export default function ContactPage() {
                           required
                           value={formData.message}
                           onChange={(e) => handleInputChange("message", e.target.value)}
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                         />
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                         disabled={
                           isSubmitting || !formData.name || !formData.email || !formData.subject || !formData.message
                         }

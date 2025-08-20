@@ -1,13 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
 
+const ADMIN_PASSWORD = "ShadowStack2024!Admin#SecurePanel$Access"
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
 
-    // Only allow setup for the specific admin email
-    if (email !== "jaspalbilkhu@gmail.com") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    // Only allow setup for the specific admin email with correct password
+    if (email !== "admin@shadowstack.com" || password !== ADMIN_PASSWORD) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 403 })
     }
 
     const supabase = createServerClient()
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
       full_name: "Admin User",
       role: "admin",
       permissions: ["all"],
-      subscription_tier: "enterprise",
+      subscription_tier: "scale",
       subscription_status: "active",
     })
 

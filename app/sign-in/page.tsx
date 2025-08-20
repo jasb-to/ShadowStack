@@ -1,90 +1,129 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Building2, Eye, EyeOff, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, ArrowLeft, Eye, EyeOff } from "lucide-react"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { supabase } from "@/lib/supabase"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { signIn } = useAuth()
-  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError("")
 
     try {
-      await signIn(email, password)
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-    } catch (error: any) {
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        // Check if user is admin
+        const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", data.user.id).single()
+
+        if (profile?.role === "admin") {
+          router.push("/admin")
+        } else {
+          router.push("/dashboard")
+        }
+      }
+    } catch (error) {
       console.error("Sign in error:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to sign in. Please check your credentials.",
-        variant: "destructive",
-      })
+      setError("An unexpected error occurred")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/" className="flex items-center justify-center mb-8">
-          <Shield className="h-10 w-10 text-blue-600" />
-          <span className="ml-3 text-3xl font-bold text-gray-900">ShadowStack</span>
-        </Link>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <Button asChild variant="ghost" className="text-slate-300 hover:text-white mb-6">
+            <Link href="/" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Link>
+          </Button>
 
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1 pb-8">
-            <CardTitle className="text-3xl text-center font-bold">Welcome back</CardTitle>
-            <CardDescription className="text-center text-gray-600">
-              Enter your credentials to access your account
+          <Link href="/" className="flex items-center justify-center mb-6">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <Building2 className="w-7 h-7 text-white" />
+            </div>
+            <span className="ml-3 text-2xl font-bold text-white">ShadowStack</span>
+          </Link>
+
+          <h2 className="text-3xl font-bold text-white">Welcome back</h2>
+          <p className="mt-2 text-slate-400">Sign in to your exchange security dashboard</p>
+        </div>
+
+        <Card className="bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Sign in to your account</CardTitle>
+            <CardDescription className="text-slate-400">
+              Don't have an account?{" "}
+              <Link href="/sign-up" className="text-emerald-400 hover:text-emerald-300">
+                Start your free trial
+              </Link>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+          <CardContent>
+            <form onSubmit={handleSignIn} className="space-y-6">
+              {error && (
+                <Alert className="bg-red-400/10 border-red-400/20">
+                  <AlertCircle className="h-4 w-4 text-red-400" />
+                  <AlertDescription className="text-red-400">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <Label htmlFor="email" className="text-slate-300">
                   Email address
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12 px-4 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 bg-slate-900 border-slate-600 text-white placeholder:text-slate-400"
+                  placeholder="Enter your email"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+
+              <div>
+                <Label htmlFor="password" className="text-slate-300">
                   Password
                 </Label>
-                <div className="relative">
+                <div className="relative mt-1">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 px-4 pr-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="bg-slate-900 border-slate-600 text-white pr-10 placeholder:text-slate-400"
+                    placeholder="Enter your password"
                   />
                   <button
                     type="button"
@@ -92,52 +131,30 @@ export default function SignInPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
+                      <EyeOff className="h-4 w-4 text-slate-400" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
+                      <Eye className="h-4 w-4 text-slate-400" />
                     )}
                   </button>
                 </div>
               </div>
+
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
                 disabled={loading}
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold"
               >
-                {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  "Sign in"
-                )}
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to ShadowStack?</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <Link href="/sign-up" className="text-blue-600 hover:text-blue-500 font-medium">
-                Create your account
+            <div className="mt-6 text-center">
+              <Link href="/forgot-password" className="text-sm text-emerald-400 hover:text-emerald-300">
+                Forgot your password?
               </Link>
             </div>
           </CardContent>
         </Card>
-
-        <div className="mt-8 text-center">
-          <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to home
-          </Link>
-        </div>
       </div>
     </div>
   )

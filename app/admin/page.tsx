@@ -6,11 +6,10 @@ import { supabase } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Shield, Users, Target, AlertTriangle, Activity, ArrowLeft } from "lucide-react"
+import { Building2, Users, Target, AlertTriangle, Activity, Home } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+import { Button } from "@/components/ui/button"
 
 interface AdminStats {
   totalUsers: number
@@ -118,7 +117,7 @@ export default function AdminPage() {
         .from("alerts")
         .select(`
           id,
-          message,
+          message_text,
           severity,
           created_at,
           user_profiles!inner(email)
@@ -145,7 +144,7 @@ export default function AdminPage() {
         recentAlerts:
           recentAlertsData?.map((alert) => ({
             id: alert.id,
-            message: alert.message || "Security alert",
+            message: alert.message_text || "Security alert",
             severity: alert.severity || "medium",
             user_email: (alert.user_profiles as any)?.email || "Unknown",
             created_at: alert.created_at,
@@ -160,10 +159,10 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <Shield className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading admin panel...</p>
+          <Building2 className="h-8 w-8 animate-spin mx-auto mb-4 text-emerald-400" />
+          <p className="text-slate-400">Loading admin panel...</p>
         </div>
       </div>
     )
@@ -190,11 +189,11 @@ export default function AdminPage() {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case "enterprise":
+      case "scale":
         return "bg-purple-100 text-purple-800"
-      case "pro":
+      case "growth":
         return "bg-blue-100 text-blue-800"
-      case "basic":
+      case "starter":
         return "bg-green-100 text-green-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -217,157 +216,165 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
-      <div className="pt-16">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center">
-                <Link href="/dashboard" className="mr-4">
-                  <ArrowLeft className="h-6 w-6 text-gray-600 hover:text-gray-900" />
+    <div className="min-h-screen bg-slate-950 text-white">
+      {/* Header */}
+      <div className="border-b border-slate-800 bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center gap-4">
+              <Button asChild variant="ghost" className="text-slate-300 hover:text-white">
+                <Link href="/" className="flex items-center gap-2">
+                  <Home className="w-4 h-4" />
+                  Home
                 </Link>
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                  <p className="text-gray-600">Platform overview and management</p>
+                  <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+                  <p className="text-slate-400">Platform overview and management</p>
                 </div>
               </div>
-              <Badge className="bg-red-100 text-red-800">
-                <Shield className="h-3 w-3 mr-1" />
-                Admin Access
-              </Badge>
             </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loadingStats ? "..." : stats.totalUsers.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Registered accounts</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monitoring Targets</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loadingStats ? "..." : stats.totalTargets.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Assets being monitored</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loadingStats ? "..." : stats.totalAlerts.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Security alerts generated</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">{loadingStats ? "..." : stats.activeAlerts}</div>
-                <p className="text-xs text-muted-foreground">Requiring attention</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Recent Users */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Users</CardTitle>
-                <CardDescription>Latest user registrations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingStats ? (
-                  <div className="text-center py-4">
-                    <Activity className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    <p>Loading users...</p>
-                  </div>
-                ) : stats.recentUsers.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">No recent users</div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Joined</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stats.recentUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>
-                            <Badge className={getTierColor(user.subscription_tier)}>{user.subscription_tier}</Badge>
-                          </TableCell>
-                          <TableCell>{formatTimeAgo(user.created_at)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Recent Alerts */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Alerts</CardTitle>
-                <CardDescription>Latest security alerts across the platform</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingStats ? (
-                  <div className="text-center py-4">
-                    <Activity className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    <p>Loading alerts...</p>
-                  </div>
-                ) : stats.recentAlerts.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">No recent alerts</div>
-                ) : (
-                  <div className="space-y-4">
-                    {stats.recentAlerts.map((alert) => (
-                      <div key={alert.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                        <AlertTriangle className="h-4 w-4 mt-1 text-orange-500" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
-                            <span className="text-xs text-gray-500">{alert.user_email}</span>
-                          </div>
-                          <p className="text-sm text-gray-900">{alert.message}</p>
-                          <p className="text-xs text-gray-500">{formatTimeAgo(alert.created_at)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+              <Building2 className="h-3 w-3 mr-1" />
+              Admin Access
+            </Badge>
           </div>
         </div>
       </div>
 
-      <Footer />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-emerald-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {loadingStats ? "..." : stats.totalUsers.toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-400">Registered accounts</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">Monitoring Targets</CardTitle>
+              <Target className="h-4 w-4 text-emerald-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {loadingStats ? "..." : stats.totalTargets.toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-400">Assets being monitored</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">Total Alerts</CardTitle>
+              <Activity className="h-4 w-4 text-emerald-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {loadingStats ? "..." : stats.totalAlerts.toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-400">Security alerts generated</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">Active Alerts</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-400">{loadingStats ? "..." : stats.activeAlerts}</div>
+              <p className="text-xs text-slate-400">Requiring attention</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Users */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Recent Users</CardTitle>
+              <CardDescription className="text-slate-400">Latest user registrations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingStats ? (
+                <div className="text-center py-4">
+                  <Activity className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
+                  <p className="text-slate-400">Loading users...</p>
+                </div>
+              ) : stats.recentUsers.length === 0 ? (
+                <div className="text-center py-4 text-slate-500">No recent users</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-700">
+                      <TableHead className="text-slate-300">Email</TableHead>
+                      <TableHead className="text-slate-300">Plan</TableHead>
+                      <TableHead className="text-slate-300">Joined</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stats.recentUsers.map((user) => (
+                      <TableRow key={user.id} className="border-slate-700">
+                        <TableCell className="font-medium text-white">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge className={getTierColor(user.subscription_tier)}>{user.subscription_tier}</Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-400">{formatTimeAgo(user.created_at)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Alerts */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Recent Alerts</CardTitle>
+              <CardDescription className="text-slate-400">Latest security alerts across the platform</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingStats ? (
+                <div className="text-center py-4">
+                  <Activity className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
+                  <p className="text-slate-400">Loading alerts...</p>
+                </div>
+              ) : stats.recentAlerts.length === 0 ? (
+                <div className="text-center py-4 text-slate-500">No recent alerts</div>
+              ) : (
+                <div className="space-y-4">
+                  {stats.recentAlerts.map((alert) => (
+                    <div key={alert.id} className="flex items-start space-x-3 p-3 border border-slate-700 rounded-lg">
+                      <AlertTriangle className="h-4 w-4 mt-1 text-orange-400" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
+                          <span className="text-xs text-slate-400">{alert.user_email}</span>
+                        </div>
+                        <p className="text-sm text-white">{alert.message}</p>
+                        <p className="text-xs text-slate-400">{formatTimeAgo(alert.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
