@@ -11,10 +11,8 @@ import { ThreatCard } from "@/components/threat-card"
 import { AiAlertCard } from "@/components/AiAlertCard"
 import { Shield, AlertTriangle, Eye, TrendingUp, Plus, Brain, Sparkles, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
 import type { AiAlert } from "@/lib/ai"
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 // Mock data for demonstration
 const mockThreats = [

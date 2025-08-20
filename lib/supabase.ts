@@ -1,5 +1,5 @@
+import { createClientComponentClient as createSupabaseClient } from "@supabase/auth-helpers-nextjs"
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
-import { createBrowserClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export function createServerClient() {
@@ -33,5 +33,8 @@ export function createServerClient() {
 }
 
 export function createClientComponentClient() {
-  return createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  return createSupabaseClient()
 }
+
+// Default export for convenience
+export const supabase = createClientComponentClient()
