@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, BookOpen, Shield, Zap, Users, Settings, ChevronRight } from "lucide-react"
+import { Search, BookOpen, Shield, Zap, Users, Settings, ChevronRight } from 'lucide-react'
 import Link from "next/link"
 
 const helpSections = [
@@ -766,7 +766,7 @@ Each alert includes specific actions:
 
 **Alert Volume Limits:**
 - **Starter:** Up to 1,000 alerts per month
-- **Growth:** Up to 10,000 alerts per month
+- **Growth:** Up to 0,000 alerts per month
 - **Enterprise:** Unlimited alerts
 - **Overage:** Additional alerts at $0.10 each
 
@@ -1019,22 +1019,21 @@ Expected response:
         id: "webhook-format",
         title: "Webhook payload formats",
         content: `Understand webhook payloads for seamless integration:
-\
-**Webhook Setup:**\
-1. **Add Webhook URL** - Settings → Webhooks → Add Webhook\
-2. **Choose Events** - Select which events to receive\
-3. **Set Secret** - Optional secret for payload verification\
+
+**Webhook Setup:**
+1. **Add Webhook URL** - Settings → Webhooks → Add Webhook
+2. **Choose Events** - Select which events to receive
+3. **Set Secret** - Optional secret for payload verification
 4. **Test Webhook** - Send test payload to verify setup
-\
+
 **Supported Events:**
-- **alert.created** - New security alert generated\
+- **alert.created** - New security alert generated
 - **alert.updated** - Alert status or details changed
 - **wallet.added** - New wallet address added to monitoring
 - **wallet.removed** - Wallet address removed from monitoring
 - **monitoring.status** - Monitoring status changes
 
 **Alert Created Payload:**
-\`\`\`json
 {
   "event": "alert.created",
   "timestamp": "2024-01-15T10:30:00Z",
@@ -1042,140 +1041,31 @@ Expected response:
     "alert_id": "alert_123456",
     "severity": "critical",
     "title": "Wallet Address Mentioned in Threat Channel",
-    "description": "Your wallet address 1A1zP1...masked was mentioned in a known hacker Telegram channel",
-    "wallet_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "description": "Your wallet address was mentioned in a known hacker channel",
+    "wallet_address": "1A1zP1...masked",
     "wallet_label": "Main Hot Wallet",
     "threat_type": "direct_targeting",
-    "source": {
-      "type": "telegram",
-      "channel": "crypto_hackers_xyz",
-      "message_id": "12345",
-      "url": "https://t.me/crypto_hackers_xyz/12345"
-    },
-    "confidence": 95,
-    "tags": ["targeting", "telegram", "hot_wallet"],
-    \"recommended_actions": [
-      \"Monitor wallet activity closely",
-      \"Consider moving funds to cold storage",
-      \"Alert security team immediately"
-    ],
-    "metadata": {\
-      "blockchain": "bitcoin",
-      "wallet_balance": \"15.5 BTC",
-      "last_transaction": "2024-01-15T09:15:00Z"
-    }
+    "confidence": 95
   }
 }
-\`\`\`
-
-**Alert Updated Payload:**
-\`\`\`json
-{
-  "event": "alert.updated",
-  "timestamp": "2024-01-15T11:00:00Z",
-  "data": {
-    "alert_id": "alert_123456",
-    "status": "resolved",
-    "resolved_by": "security_team",
-    "resolution_note": "False positive - address mentioned in educational context",
-    "updated_fields": ["status", "resolution_note"]
-  }
-}
-\`\`\`
-\
-**Wallet Added Payload:**
-\`\`\`json
-{
-  "event\": "wallet.added",
-  "timestamp": "2024-01-15T12:00:00Z",
-  "data": {
-    \"wallet_id": "wallet_789012",
-    "address": "0x742d35Cc6634C0532925a3b8D4C2C4e4C4C4C4C4",
-    "label": "Trading Bot Wallet",
-    "blockchain": "ethereum",
-    "monitoring_status": "active",
-    "added_by": "user_456"
-  }
-}
-\`\`\`
-
-**Monitoring Status Payload:**
-\`\`\`json
-{
-  "event": "monitoring.status",
-  "timestamp": "2024-01-15T13:00:00Z",
-  "data": {
-    "status": "degraded",
-    "affected_services": ["telegram_monitoring"],
-    "estimated_resolution": \"2024-01-15T14:00:00Z",
-    "message": \"Temporary issue with Telegram API, monitoring continues with reduced coverage"
-  }
-}
-\`\`\`
 
 **Webhook Security:**
-- **HTTPS Required** - All webhook URLs must use HTTPS
-- **Signature Verification** - Verify payloads using webhook secret
-- **IP Whitelist** - Webhooks sent from specific IP ranges
-- **Retry Logic** - Failed deliveries retried up to 5 times
-
-**Signature Verification (Node.js):**
-\`\`\`javascript
-const crypto = require('crypto\');
-\
-function verifyWebhook(payload, signature, secret) {\
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
-}
-\`\`\`
-
-**Webhook Headers:**
-\`\`\`
-Content-Type: application/json
-X-ShadowStack-Event: alert.created
-X-ShadowStack-Signature: sha256=abc123...
-X-ShadowStack-Delivery: uuid-delivery-id
-User-Agent: ShadowStack-Webhooks/1.0
-\`\`\`
-
-**Error Handling:**
-- **Timeout** - 30 second timeout for webhook delivery
-- **Retry Schedule** - Immediate, 1min, 5min, 15min, 1hour
-- **Failure Notification** - Email sent after all retries fail
-- **Webhook Logs** - Delivery attempts logged in dashboard
-
-**Testing Webhooks:**
-Use tools like ngrok for local testing:
-\`\`\`bash
-ngrok http 3000
-# Use the HTTPS URL in webhook settings
-\`\`\`
-
-**Best Practices:**
-- Implement idempotency using alert_id
-- Verify webhook signatures
-- Handle retries gracefully
-- Log webhook deliveries for debugging
-- Use queues for processing webhook payloads`
+- HTTPS Required - All webhook URLs must use HTTPS
+- Signature Verification - Verify payloads using webhook secret
+- IP Whitelist - Webhooks sent from specific IP ranges
+- Retry Logic - Failed deliveries retried up to 5 times`
       },
       {
         id: "rate-limits",
-        title: \"Rate limits and best practices",
+        title: "Rate limits and best practices",
         content: `Optimize your API usage within rate limits:
 
 **Rate Limit Tiers:**
-- **Starter Plan:** 100 requests/hour (1.67/minute)\
-- **Growth Plan:** 1,000 requests/hour (16.67/minute)\
-- **Enterprise Plan:** 10,000 requests/hour (166.67/minute)\
+- **Starter Plan:** 100 requests/hour (1.67/minute)
+- **Growth Plan:** 1,000 requests/hour (16.67/minute)
+- **Enterprise Plan:** 10,000 requests/hour (166.67/minute)
 - **Burst Allowance:** 2x rate limit for 5-minute periods
-\
+
 **Rate Limit Headers:**
 Every API response includes rate limit information:
 \`\`\`
@@ -1203,10 +1093,10 @@ X-RateLimit-Retry-After: 3600
 **1. Implement Exponential Backoff:**
 \`\`\`javascript
 async function apiRequest(url, options, retries = 3) {
-  try {\
-    const response = await fetch(url, options);\
-    \
-    if (response.status === 429) {\
+  try {
+    const response = await fetch(url, options);
+
+    if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After');
       const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, 4 - retries) * 1000;
       
@@ -1247,11 +1137,11 @@ const response = await fetch('/api/wallets/batch', {
 // Fetch all alerts efficiently
 async function getAllAlerts() {
   const allAlerts = [];
-  const page = 1;
-  const hasMore = true;
+  let page = 1;
+  let hasMore = true;
   
   while (hasMore) {
-    const response = await fetch(\`/api/alerts?page=\${page}&limit=100\`);
+    const response = await fetch(`/api/alerts?page=${page}&limit=100`);
     const data = await response.json();
     
     allAlerts.push(...data.data);
@@ -1298,7 +1188,7 @@ function trackRateLimit(response) {
   const remaining = response.headers.get('X-RateLimit-Remaining');
   const reset = response.headers.get('X-RateLimit-Reset');
   
-  console.log(\`Rate limit: \${remaining}/\${limit}, resets at \${new Date(reset * 1000)}\`);
+  console.log(`Rate limit: ${remaining}/${limit}, resets at ${new Date(reset * 1000)}`);
   
   // Alert when approaching limit
   if (remaining < limit * 0.1) {
@@ -1396,14 +1286,14 @@ async function sendSlackAlert(alert) {
       type: 'header',
       text: {
         type: 'plain_text',
-        text: \`🚨 \${alert.severity.toUpperCase()} Security Alert\`
+        text: `🚨 ${alert.severity.toUpperCase()} Security Alert`
       }
     },
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: \`*\${alert.title}*\\n\${alert.description}\`
+        text: `*${alert.title}*\\n${alert.description}`
       }
     },
     {
@@ -1411,11 +1301,11 @@ async function sendSlackAlert(alert) {
       fields: [
         {
           type: 'mrkdwn',
-          text: \`*Wallet:*\\n\${alert.wallet_label}\`
+          text: `*Wallet:*\\n${alert.wallet_label}`
         },
         {
           type: 'mrkdwn',
-          text: \`*Confidence:*\\n\${alert.confidence}%\`
+          text: `*Confidence:*\\n${alert.confidence}%`
         }
       ]
     },
@@ -1432,7 +1322,7 @@ async function sendSlackAlert(alert) {
         {
           type: 'button',
           text: { type: 'plain_text', text: 'View Details' },
-          url: \`https://dashboard.shadowstack.com/alerts/\${alert.alert_id}\`
+          url: `https://dashboard.shadowstack.com/alerts/${alert.alert_id}`
         }
       ]
     }
@@ -1452,7 +1342,7 @@ function verifySignature(payload, signature) {
   
   return crypto.timingSafeEqual(
     Buffer.from(signature),
-    Buffer.from(\`sha256=\${expectedSignature}\`)
+    Buffer.from(`sha256=${expectedSignature}`)
   );
 }
 
@@ -1482,7 +1372,7 @@ def handle_webhook():
     
     data = request.json
     
-    if data['event'] == 'alert.created':
+    if data['event'] == 'alert.created') {
         send_email_alert(data)
     
     return jsonify({'status': 'success'}), 200
