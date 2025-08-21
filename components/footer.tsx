@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Shield, Twitter, Github, Linkedin, Mail } from "lucide-react"
 
-export default function Footer() {
+export function Footer() {
   return (
     <footer className="bg-slate-950 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
