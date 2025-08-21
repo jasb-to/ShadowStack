@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 
 const helpCategories = [
   {
@@ -91,7 +93,6 @@ const popularArticles = [
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   const filteredArticles = popularArticles.filter(
     (article) =>
@@ -101,8 +102,10 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      <Navbar />
+
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 pt-20">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
@@ -282,6 +285,8 @@ export default function HelpPage() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }
