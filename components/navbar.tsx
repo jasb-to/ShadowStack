@@ -3,208 +3,174 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Shield, ChevronDown } from "lucide-react"
+import { Shield, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
-const navigation = [
-  { name: "Features", href: "/features" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Demo", href: "/demo" },
-  {
-    name: "Resources",
-    href: "#",
-    dropdown: [
-      { name: "Documentation", href: "/docs" },
-      { name: "Blog", href: "/blog" },
-      { name: "Help Center", href: "/help" },
-      { name: "Contact", href: "/contact" },
-    ],
-  },
-]
+import { supabase } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const pathname = usePathname()
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === href
-    return pathname.startsWith(href)
+  const isActive = (path: string) => {
+    if (path === "/" && pathname === "/") return true
+    if (path !== "/" && pathname.startsWith(path)) return true
+    return false
   }
 
+  const navigation = [
+    { name: "Features", href: "/#features" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "Demo", href: "/demo" },
+    { name: "Docs", href: "/docs" },
+    { name: "Blog", href: "/blog" },
+  ]
+
   return (
-    <header
-      className={`fixed w-full top-0 z-50 transition-all duration-200 ${
-        scrolled
-          ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800"
-          : "bg-transparent"
-      }`}
-    >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
-        {/* Logo */}
-        <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">ShadowStack</span>
+    <nav className="fixed top-0 w-full z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
+      <div className="container px-4 md:px-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <Shield className="h-8 w-8 text-emerald-400" />
+            <span className="text-xl font-bold text-white">ShadowStack</span>
           </Link>
-        </div>
 
-        {/* Mobile menu button */}
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <span className="sr-only">Open main menu</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* Desktop navigation */}
-        <div className="hidden lg:flex lg:gap-x-12">
-          {navigation.map((item) =>
-            item.dropdown ? (
-              <DropdownMenu key={item.name}>
-                <DropdownMenuTrigger className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  {item.name}
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  {item.dropdown.map((subItem) => (
-                    <DropdownMenuItem key={subItem.name} asChild>
-                      <Link
-                        href={subItem.href}
-                        className={`w-full ${isActive(subItem.href) ? "text-blue-600 dark:text-blue-400" : ""}`}
-                      >
-                        {subItem.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`text-sm font-semibold leading-6 transition-colors ${
-                  isActive(item.href)
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400"
+                className={`text-sm font-medium transition-colors hover:text-emerald-400 ${
+                  isActive(item.href) ? "text-emerald-400" : "text-slate-300"
                 }`}
               >
                 {item.name}
               </Link>
-            ),
-          )}
-        </div>
+            ))}
+          </div>
 
-        {/* Desktop CTA buttons */}
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
-          <Link href="/sign-in">
-            <Button variant="ghost" className="text-sm font-semibold">
-              Sign in
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Button asChild variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  <Link href="/dashboard">Dashboard</Link>
+                </Button>
+                <Button
+                  onClick={() => supabase.auth.signOut()}
+                  variant="outline"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Button asChild variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                >
+                  <Link href="/sign-up">Get Started</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-slate-300 hover:text-white hover:bg-slate-800"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button className="text-sm font-semibold">Get started</Button>
-          </Link>
+          </div>
         </div>
-      </nav>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="fixed inset-0 z-50" />
-          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:sm:ring-gray-100/10">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="-m-1.5 p-1.5 flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">ShadowStack</span>
-              </Link>
-              <button
-                type="button"
-                className="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-300"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="sr-only">Close menu</span>
-                <X className="h-6 w-6" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-gray-500/10 dark:divide-gray-500/25">
-                <div className="space-y-2 py-6">
-                  {navigation.map((item) =>
-                    item.dropdown ? (
-                      <div key={item.name} className="space-y-2">
-                        <div className="text-base font-semibold leading-7 text-gray-900 dark:text-white px-3 py-2">
-                          {item.name}
-                        </div>
-                        {item.dropdown.map((subItem) => (
-                          <Link
-                            key={subItem.name}
-                            href={subItem.href}
-                            className={`block rounded-lg px-6 py-2 text-sm font-semibold leading-7 transition-colors ${
-                              isActive(subItem.href)
-                                ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                                : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-                            }`}
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            {subItem.name}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors ${
-                          isActive(item.href)
-                            ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                            : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ),
-                  )}
-                </div>
-                <div className="py-6 space-y-2">
-                  <Link
-                    href="/sign-in"
-                    className="block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-blue-600 hover:bg-blue-700 transition-colors text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get started
-                  </Link>
-                </div>
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`block px-3 py-2 text-base font-medium transition-colors hover:text-emerald-400 hover:bg-slate-800 rounded-md ${
+                    isActive(item.href) ? "text-emerald-400 bg-slate-800" : "text-slate-300"
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <div className="border-t border-slate-700 pt-4 mt-4">
+                {user ? (
+                  <div className="space-y-2">
+                    <Link
+                      href="/dashboard"
+                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        supabase.auth.signOut()
+                        setIsOpen(false)
+                      }}
+                      className="block w-full text-left px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/sign-in"
+                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      className="block px-3 py-2 text-base font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-md text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </header>
+        )}
+      </div>
+    </nav>
   )
 }
