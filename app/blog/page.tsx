@@ -1,177 +1,185 @@
-"use client"
-
-import { useState } from "react"
-import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, Calendar, Clock, User, ArrowRight, TrendingUp, Shield, Zap, Brain, ChevronRight } from "lucide-react"
-
-const categories = [
-  { name: "All Posts", count: 24, active: true },
-  { name: "Security", count: 8, active: false },
-  { name: "Technology", count: 6, active: false },
-  { name: "Industry News", count: 5, active: false },
-  { name: "Tutorials", count: 5, active: false },
-]
+import { Search, Calendar, Clock, ArrowRight, TrendingUp, Shield, Brain, AlertTriangle, Eye, Zap } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
 const featuredPost = {
-  id: "1",
   title: "The Future of Crypto Security: AI-Powered Threat Detection",
   excerpt:
-    "Explore how artificial intelligence is revolutionizing cryptocurrency security monitoring and threat detection in 2024.",
-  content:
-    "As the cryptocurrency landscape continues to evolve, so do the threats that target digital assets. Traditional security measures, while still important, are no longer sufficient to protect against sophisticated attacks...",
+    "Discover how artificial intelligence is revolutionizing cryptocurrency security monitoring and what it means for the future of digital asset protection.",
   author: "Sarah Chen",
-  authorRole: "Head of Security",
-  publishedAt: "2024-01-15",
+  date: "2024-01-15",
   readTime: "8 min read",
-  category: "Security",
-  image: "/placeholder.svg?height=400&width=800&text=AI+Security",
+  category: "AI & Security",
+  image: "/placeholder.jpg",
   featured: true,
-  tags: ["AI", "Security", "Blockchain", "Threat Detection"],
 }
 
 const blogPosts = [
   {
-    id: "2",
-    title: "Multi-Chain Wallet Monitoring: Best Practices for 2024",
-    excerpt: "Learn how to effectively monitor wallets across Bitcoin, Ethereum, BSC, Solana, and TRON networks.",
-    author: "Marcus Rodriguez",
-    authorRole: "Blockchain Engineer",
-    publishedAt: "2024-01-12",
-    readTime: "6 min read",
-    category: "Technology",
-    image: "/placeholder.svg?height=300&width=500&text=Multi-Chain",
-    tags: ["Multi-Chain", "Monitoring", "Best Practices"],
-  },
-  {
-    id: "3",
-    title: "Regulatory Compliance in Crypto Security Monitoring",
+    title: "Understanding Wallet Security: Best Practices for 2024",
     excerpt:
-      "Understanding the evolving regulatory landscape and how to maintain compliance while monitoring crypto assets.",
-    author: "Elena Kowalski",
-    authorRole: "Compliance Officer",
-    publishedAt: "2024-01-10",
-    readTime: "10 min read",
-    category: "Industry News",
-    image: "/placeholder.svg?height=300&width=500&text=Compliance",
-    tags: ["Compliance", "Regulation", "Legal"],
-  },
-  {
-    id: "4",
-    title: "Setting Up Your First Security Alert: A Step-by-Step Guide",
-    excerpt: "Complete tutorial on configuring your first wallet monitoring alert with ShadowStack.",
-    author: "David Park",
-    authorRole: "Developer Relations",
-    publishedAt: "2024-01-08",
-    readTime: "4 min read",
-    category: "Tutorials",
-    image: "/placeholder.svg?height=300&width=500&text=Tutorial",
-    tags: ["Tutorial", "Setup", "Alerts"],
-  },
-  {
-    id: "5",
-    title: "The Rise of DeFi Security Threats in 2024",
-    excerpt: "Analyzing the latest DeFi security threats and how exchanges can protect themselves.",
-    author: "Alex Thompson",
-    authorRole: "Security Researcher",
-    publishedAt: "2024-01-05",
-    readTime: "7 min read",
+      "Essential security measures every crypto holder should implement to protect their digital assets from emerging threats.",
+    author: "Mike Rodriguez",
+    date: "2024-01-12",
+    readTime: "6 min read",
     category: "Security",
-    image: "/placeholder.svg?height=300&width=500&text=DeFi+Security",
-    tags: ["DeFi", "Security", "Threats"],
+    image: "/placeholder.jpg",
   },
   {
-    id: "6",
-    title: "API Integration: Connecting ShadowStack to Your Infrastructure",
-    excerpt: "How to integrate ShadowStack's monitoring capabilities into your existing security infrastructure.",
-    author: "Jennifer Liu",
-    authorRole: "Solutions Engineer",
-    publishedAt: "2024-01-03",
-    readTime: "12 min read",
+    title: "How to Set Up Real-Time Monitoring for Your Crypto Portfolio",
+    excerpt:
+      "Step-by-step guide to implementing comprehensive monitoring for your cryptocurrency wallets and exchanges.",
+    author: "Alex Thompson",
+    date: "2024-01-10",
+    readTime: "5 min read",
+    category: "Tutorial",
+    image: "/placeholder.jpg",
+  },
+  {
+    title: "The Rise of DeFi Security Threats: What You Need to Know",
+    excerpt: "Analyzing the latest security vulnerabilities in decentralized finance and how to protect yourself.",
+    author: "Emma Wilson",
+    date: "2024-01-08",
+    readTime: "7 min read",
+    category: "DeFi",
+    image: "/placeholder.jpg",
+  },
+  {
+    title: "Machine Learning in Cryptocurrency: Detecting Anomalies",
+    excerpt: "How machine learning algorithms can identify suspicious patterns in blockchain transactions.",
+    author: "David Park",
+    date: "2024-01-05",
+    readTime: "9 min read",
     category: "Technology",
-    image: "/placeholder.svg?height=300&width=500&text=API+Integration",
-    tags: ["API", "Integration", "Infrastructure"],
+    image: "/placeholder.jpg",
+  },
+  {
+    title: "Regulatory Updates: Global Crypto Security Standards",
+    excerpt: "Latest regulatory developments affecting cryptocurrency security requirements worldwide.",
+    author: "Lisa Chang",
+    date: "2024-01-03",
+    readTime: "4 min read",
+    category: "Regulation",
+    image: "/placeholder.jpg",
+  },
+  {
+    title: "Case Study: Preventing a $50M Exchange Hack",
+    excerpt: "Real-world example of how advanced monitoring systems prevented a major cryptocurrency exchange breach.",
+    author: "James Miller",
+    date: "2024-01-01",
+    readTime: "10 min read",
+    category: "Case Study",
+    image: "/placeholder.jpg",
   },
 ]
 
-const popularTags = [
-  "Security",
-  "AI",
-  "Blockchain",
-  "DeFi",
-  "Compliance",
-  "API",
-  "Tutorial",
-  "Multi-Chain",
-  "Threats",
-  "Monitoring",
+const categories = [
+  { name: "All Posts", count: 24, active: true },
+  { name: "Security", count: 8 },
+  { name: "AI & Technology", count: 6 },
+  { name: "Tutorial", count: 5 },
+  { name: "DeFi", count: 3 },
+  { name: "Regulation", count: 2 },
 ]
 
-const recentPosts = [
-  { title: "Weekly Security Digest: January 2024", date: "Jan 15, 2024" },
-  { title: "New Feature: Advanced Pattern Recognition", date: "Jan 12, 2024" },
-  { title: "ShadowStack at Crypto Security Summit", date: "Jan 10, 2024" },
-  { title: "Q4 2023 Threat Intelligence Report", date: "Jan 8, 2024" },
+const trendingTopics = [
+  { name: "AI Security", icon: Brain, posts: 12 },
+  { name: "Wallet Protection", icon: Shield, posts: 18 },
+  { name: "Threat Detection", icon: AlertTriangle, posts: 15 },
+  { name: "Monitoring Tools", icon: Eye, posts: 9 },
+  { name: "DeFi Security", icon: Zap, posts: 7 },
 ]
 
 export default function BlogPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All Posts")
-
-  const filteredPosts = blogPosts.filter((post) => {
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "All Posts" || post.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
 
       <div className="pt-24 pb-16">
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-b from-slate-900/50 to-transparent">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">ShadowStack Blog</h1>
-              <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                Stay updated with the latest in crypto security, threat intelligence, and industry insights
-              </p>
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">ShadowStack Blog</h1>
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+              Insights, tutorials, and updates on cryptocurrency security and threat detection
+            </p>
+
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search articles..."
+                className="pl-12 pr-4 py-4 text-lg bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-500"
+              />
             </div>
+          </div>
+        </div>
 
-            {/* Search and Categories */}
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <Input
-                  type="text"
-                  placeholder="Search articles..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-3 bg-slate-800/50 border-slate-700 text-white placeholder-slate-400 focus:border-emerald-500"
-                />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Featured Post */}
+          <section className="mb-16">
+            <Card className="bg-gradient-to-r from-emerald-900/20 to-blue-900/20 border-emerald-500/20 overflow-hidden">
+              <div className="md:flex">
+                <div className="md:w-1/2">
+                  <Image
+                    src={featuredPost.image || "/placeholder.svg"}
+                    alt={featuredPost.title}
+                    width={600}
+                    height={400}
+                    className="w-full h-64 md:h-full object-cover"
+                  />
+                </div>
+                <div className="md:w-1/2 p-8">
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 mb-4">Featured</Badge>
+                  <CardTitle className="text-2xl md:text-3xl text-white mb-4 leading-tight">
+                    {featuredPost.title}
+                  </CardTitle>
+                  <CardDescription className="text-slate-300 text-lg mb-6">{featuredPost.excerpt}</CardDescription>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-4 text-sm text-slate-400">
+                      <span>{featuredPost.author}</span>
+                      <span>•</span>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {new Date(featuredPost.date).toLocaleDateString()}
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {featuredPost.readTime}
+                      </div>
+                    </div>
+                  </div>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    Read Article
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
+            </Card>
+          </section>
 
-              {/* Category Filter */}
-              <div className="flex flex-wrap gap-2 justify-center">
+          <div className="grid gap-8 lg:grid-cols-4">
+            {/* Main Content */}
+            <div className="lg:col-span-3">
+              {/* Categories */}
+              <div className="flex flex-wrap gap-2 mb-8">
                 {categories.map((category) => (
                   <Button
                     key={category.name}
-                    variant={selectedCategory === category.name ? "default" : "outline"}
+                    variant={category.active ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category.name)}
                     className={
-                      selectedCategory === category.name
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                        : "border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
+                      category.active
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "border-slate-600 text-slate-300 hover:bg-slate-800"
                     }
                   >
                     {category.name}
@@ -181,138 +189,59 @@ export default function BlogPage() {
                   </Button>
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-3 space-y-12">
-              {/* Featured Post */}
-              <section>
-                <div className="flex items-center mb-6">
-                  <TrendingUp className="w-5 h-5 text-emerald-400 mr-2" />
-                  <h2 className="text-2xl font-bold text-white">Featured Article</h2>
-                </div>
-
-                <Card className="bg-slate-800/50 border-slate-700 overflow-hidden hover:bg-slate-800/70 transition-colors">
-                  <div className="aspect-video bg-gradient-to-r from-emerald-600/20 to-cyan-600/20 flex items-center justify-center">
-                    <Brain className="w-16 h-16 text-emerald-400" />
-                  </div>
-                  <CardContent className="p-8">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-600/30">
-                        {featuredPost.category}
-                      </Badge>
-                      <div className="flex items-center text-slate-400 text-sm">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(featuredPost.publishedAt).toLocaleDateString()}
-                      </div>
-                      <div className="flex items-center text-slate-400 text-sm">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {featuredPost.readTime}
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold text-white mb-4 hover:text-emerald-400 transition-colors">
-                      <Link href={`/blog/${featuredPost.id}`}>{featuredPost.title}</Link>
-                    </h3>
-
-                    <p className="text-slate-300 mb-6 leading-relaxed">{featuredPost.excerpt}</p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center mr-3">
-                          <User className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{featuredPost.author}</p>
-                          <p className="text-slate-400 text-sm">{featuredPost.authorRole}</p>
-                        </div>
-                      </div>
-
-                      <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                        <Link href={`/blog/${featuredPost.id}`}>
-                          Read More
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
 
               {/* Blog Posts Grid */}
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-6">Latest Articles</h2>
-
-                {filteredPosts.length > 0 ? (
-                  <div className="grid gap-8 md:grid-cols-2">
-                    {filteredPosts.map((post) => (
-                      <Card
-                        key={post.id}
-                        className="bg-slate-800/50 border-slate-700 overflow-hidden hover:bg-slate-800/70 transition-colors group"
-                      >
-                        <div className="aspect-video bg-gradient-to-r from-slate-700 to-slate-600 flex items-center justify-center">
-                          <Shield className="w-12 h-12 text-slate-400" />
+              <div className="grid gap-8 md:grid-cols-2">
+                {blogPosts.map((post, index) => (
+                  <Card
+                    key={index}
+                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-all duration-200 group"
+                  >
+                    <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                      <Image
+                        src={post.image || "/placeholder.svg"}
+                        alt={post.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-slate-900/80 text-slate-300 border-slate-600">{post.category}</Badge>
+                      </div>
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-white text-xl leading-tight group-hover:text-emerald-400 transition-colors">
+                        <Link href="#" className="line-clamp-2">
+                          {post.title}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription className="text-slate-400 line-clamp-3">{post.excerpt}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-slate-400">
+                        <div className="flex items-center space-x-2">
+                          <span>{post.author}</span>
+                          <span>•</span>
+                          <div className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {new Date(post.date).toLocaleDateString()}
+                          </div>
                         </div>
-                        <CardContent className="p-6">
-                          <div className="flex items-center space-x-3 mb-3">
-                            <Badge variant="outline" className="border-slate-600 text-slate-400">
-                              {post.category}
-                            </Badge>
-                            <div className="flex items-center text-slate-500 text-sm">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {post.readTime}
-                            </div>
-                          </div>
-
-                          <h3 className="text-lg font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors">
-                            <Link href={`/blog/${post.id}`}>{post.title}</Link>
-                          </h3>
-
-                          <p className="text-slate-400 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center mr-2">
-                                <span className="text-white text-xs font-semibold">
-                                  {post.author
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="text-white text-sm font-medium">{post.author}</p>
-                                <p className="text-slate-500 text-xs">
-                                  {new Date(post.publishedAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-
-                            <Link
-                              href={`/blog/${post.id}`}
-                              className="text-emerald-400 hover:text-emerald-300 transition-colors"
-                            >
-                              <ChevronRight className="w-5 h-5" />
-                            </Link>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="bg-slate-800/50 border-slate-700">
-                    <CardContent className="text-center py-12">
-                      <Search className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No articles found</h3>
-                      <p className="text-slate-400">Try adjusting your search or filter criteria.</p>
+                        <div className="flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {post.readTime}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
-                )}
-              </section>
+                ))}
+              </div>
+
+              {/* Load More */}
+              <div className="text-center mt-12">
+                <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent">
+                  Load More Articles
+                </Button>
+              </div>
             </div>
 
             {/* Sidebar */}
@@ -320,10 +249,7 @@ export default function BlogPage() {
               {/* Newsletter Signup */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Zap className="w-5 h-5 mr-2 text-emerald-400" />
-                    Stay Updated
-                  </CardTitle>
+                  <CardTitle className="text-white">Stay Updated</CardTitle>
                   <CardDescription className="text-slate-400">
                     Get the latest security insights delivered to your inbox
                   </CardDescription>
@@ -332,28 +258,38 @@ export default function BlogPage() {
                   <Input
                     type="email"
                     placeholder="Enter your email"
-                    className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                    className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
                   />
                   <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Subscribe</Button>
-                  <p className="text-xs text-slate-500">No spam. Unsubscribe at any time.</p>
                 </CardContent>
               </Card>
 
-              {/* Popular Tags */}
+              {/* Trending Topics */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="text-white">Popular Tags</CardTitle>
+                  <CardTitle className="text-white flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-emerald-400" />
+                    Trending Topics
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {popularTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="border-slate-600 text-slate-300 hover:bg-slate-700 cursor-pointer transition-colors"
+                  <div className="space-y-4">
+                    {trendingTopics.map((topic, index) => (
+                      <Link
+                        key={index}
+                        href="#"
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors group"
                       >
-                        {tag}
-                      </Badge>
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center mr-3">
+                            <topic.icon className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <span className="text-slate-300 group-hover:text-white transition-colors">{topic.name}</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-slate-600 text-slate-300">
+                          {topic.posts}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 </CardContent>
@@ -366,36 +302,23 @@ export default function BlogPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentPosts.map((post, index) => (
-                      <div key={index} className="border-b border-slate-700 last:border-0 pb-3 last:pb-0">
-                        <Link href="#" className="block group">
-                          <h4 className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors mb-1">
-                            {post.title}
-                          </h4>
-                          <p className="text-xs text-slate-500">{post.date}</p>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Categories */}
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Categories</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {categories.slice(1).map((category) => (
-                      <div key={category.name} className="flex items-center justify-between">
-                        <Link href="#" className="text-slate-400 hover:text-white transition-colors text-sm">
-                          {category.name}
-                        </Link>
-                        <Badge variant="outline" className="border-slate-600 text-slate-500 text-xs">
-                          {category.count}
-                        </Badge>
-                      </div>
+                    {blogPosts.slice(0, 3).map((post, index) => (
+                      <Link
+                        key={index}
+                        href="#"
+                        className="block p-3 rounded-lg hover:bg-slate-700/50 transition-colors group"
+                      >
+                        <h4 className="text-slate-300 group-hover:text-white transition-colors text-sm font-medium line-clamp-2 mb-2">
+                          {post.title}
+                        </h4>
+                        <div className="flex items-center text-xs text-slate-400">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {new Date(post.date).toLocaleDateString()}
+                          <span className="mx-2">•</span>
+                          <Clock className="w-3 h-3 mr-1" />
+                          {post.readTime}
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </CardContent>

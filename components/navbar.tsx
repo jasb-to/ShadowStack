@@ -4,192 +4,183 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
+import { Shield, Menu, ChevronDown, Eye, AlertTriangle, Settings, LogOut, User, CreditCard } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, X, Shield, ChevronDown, Settings, LogOut, Bell, Search } from "lucide-react"
-import { supabase } from "@/lib/supabase"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 const navigation = [
   { name: "Features", href: "/#features" },
   { name: "Pricing", href: "/pricing" },
   { name: "Demo", href: "/demo" },
-  { name: "Docs", href: "/docs" },
+  { name: "About", href: "/about" },
   { name: "Blog", href: "/blog" },
+  { name: "Help", href: "/help" },
 ]
 
-const productLinks = [
-  { name: "Wallet Monitoring", href: "/features/monitoring" },
-  { name: "Threat Detection", href: "/features/detection" },
-  { name: "API Integration", href: "/features/api" },
-  { name: "Proof of Reserves", href: "/features/reserves" },
-]
-
-const resourceLinks = [
-  { name: "Documentation", href: "/docs" },
-  { name: "Help Center", href: "/help" },
-  { name: "Community", href: "/community" },
-  { name: "Status", href: "/status" },
+const dashboardNavigation = [
+  { name: "Overview", href: "/dashboard", icon: Eye },
+  { name: "Alerts", href: "/dashboard/alerts", icon: AlertTriangle },
+  { name: "Targets", href: "/dashboard/targets", icon: Shield },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+  const { user, signOut } = useAuth()
+
+  const isDashboard = pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin")
 
   useEffect(() => {
-    // Get initial user
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-      setLoading(false)
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
     }
-
-    getUser()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-  }
-
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/"
-    return pathname.startsWith(href)
+    try {
+      await signOut()
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
   }
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-200 ${
+        isScrolled || isDashboard ? "bg-slate-900/95 backdrop-blur-sm border-b border-slate-800" : "bg-transparent"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">ShadowStack</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {/* Product Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  Product
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700">
-                {productLinks.map((item) => (
-                  <DropdownMenuItem key={item.name} asChild>
-                    <Link href={item.href} className="text-slate-300 hover:text-white hover:bg-slate-800">
-                      {item.name}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(item.href) ? "text-emerald-400" : "text-slate-300 hover:text-white"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-
-            {/* Resources Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  Resources
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700">
-                {resourceLinks.map((item) => (
-                  <DropdownMenuItem key={item.name} asChild>
-                    <Link href={item.href} className="text-slate-300 hover:text-white hover:bg-slate-800">
-                      {item.name}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center space-x-2">
+              <Shield className="h-8 w-8 text-emerald-500" />
+              <span className="text-xl font-bold text-white">ShadowStack</span>
+            </Link>
           </div>
 
-          {/* Auth Section */}
-          <div className="hidden md:flex items-center space-x-4">
-            {loading ? (
-              <div className="w-8 h-8 bg-slate-800 rounded animate-pulse" />
-            ) : user ? (
-              <div className="flex items-center space-x-3">
-                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Search className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Bell className="w-4 h-4" />
-                </Button>
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              {isDashboard ? (
+                // Dashboard Navigation
+                <>
+                  {dashboardNavigation.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : "text-slate-300 hover:text-white hover:bg-slate-800"
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4 mr-2" />
+                        {item.name}
+                      </Link>
+                    )
+                  })}
+                </>
+              ) : (
+                // Public Navigation
+                <>
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Auth */}
+          <div className="hidden md:block">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                {!isDashboard && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
+                  >
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                )}
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Account
-                      <ChevronDown className="ml-1 h-3 w-3" />
+                    <Button variant="ghost" className="flex items-center space-x-2 text-slate-300 hover:text-white">
+                      <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700" align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                        <Shield className="mr-2 h-4 w-4" />
+                  <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">
+                    <DropdownMenuLabel className="text-slate-300">{user.email}</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuItem asChild className="text-slate-300 hover:bg-slate-700">
+                      <Link href="/dashboard" className="flex items-center">
+                        <Eye className="w-4 h-4 mr-2" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                        <Settings className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem asChild className="text-slate-300 hover:bg-slate-700">
+                      <Link href="/dashboard/settings" className="flex items-center">
+                        <Settings className="w-4 h-4 mr-2" />
                         Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="text-slate-300 hover:bg-slate-700">
+                      <Link href="/pricing" className="flex items-center">
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Billing
+                        <Badge
+                          variant="outline"
+                          className="ml-auto bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        >
+                          Pro
+                        </Badge>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-slate-700" />
                     <DropdownMenuItem
                       onClick={handleSignOut}
-                      className="text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                      className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Button asChild variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Link href="/sign-in">Sign In</Link>
+              <div className="flex items-center space-x-4">
+                <Button asChild variant="ghost" className="text-slate-300 hover:text-white">
+                  <Link href="/sign-in">Sign in</Link>
                 </Button>
-                <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
                   <Link href="/sign-up">Get Started</Link>
                 </Button>
               </div>
@@ -198,85 +189,116 @@ export function Navbar() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-slate-300 hover:text-white hover:bg-slate-800"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-slate-300">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] bg-slate-900 border-slate-800">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-6 w-6 text-emerald-500" />
+                    <span className="text-lg font-bold text-white">ShadowStack</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {isDashboard ? (
+                    // Dashboard Mobile Navigation
+                    <>
+                      {dashboardNavigation.map((item) => {
+                        const isActive = pathname === item.href
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                              isActive
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "text-slate-300 hover:text-white hover:bg-slate-800"
+                            }`}
+                          >
+                            <item.icon className="w-4 h-4 mr-3" />
+                            {item.name}
+                          </Link>
+                        )
+                      })}
+                      <div className="border-t border-slate-800 pt-4 mt-4">
+                        <Button
+                          onClick={handleSignOut}
+                          variant="ghost"
+                          className="w-full justify-start text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                        >
+                          <LogOut className="w-4 h-4 mr-3" />
+                          Sign out
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    // Public Mobile Navigation
+                    <>
+                      {navigation.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+
+                      <div className="border-t border-slate-800 pt-4 mt-4 space-y-2">
+                        {user ? (
+                          <>
+                            <Button
+                              asChild
+                              variant="outline"
+                              className="w-full border-slate-600 text-slate-300 bg-transparent"
+                            >
+                              <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                                Dashboard
+                              </Link>
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                handleSignOut()
+                                setIsOpen(false)
+                              }}
+                              variant="ghost"
+                              className="w-full text-red-400 hover:bg-red-500/10"
+                            >
+                              Sign out
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              asChild
+                              variant="outline"
+                              className="w-full border-slate-600 text-slate-300 bg-transparent"
+                            >
+                              <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                                Sign in
+                              </Link>
+                            </Button>
+                            <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700">
+                              <Link href="/sign-up" onClick={() => setIsOpen(false)}>
+                                Get Started
+                              </Link>
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-800 py-4">
-            <div className="space-y-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActive(item.href)
-                      ? "text-emerald-400 bg-slate-800/50"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-
-              <div className="border-t border-slate-800 pt-4 mt-4">
-                {user ? (
-                  <div className="space-y-2">
-                    <Link
-                      href="/dashboard"
-                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/dashboard/settings"
-                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Settings
-                    </Link>
-                    <button
-                      onClick={() => {
-                        handleSignOut()
-                        setMobileMenuOpen(false)
-                      }}
-                      className="block w-full text-left px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Link
-                      href="/sign-in"
-                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/sign-up"
-                      className="block px-3 py-2 text-base font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md mx-3"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Get Started
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   )

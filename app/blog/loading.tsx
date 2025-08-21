@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function BlogLoading() {
   return (
@@ -9,98 +10,77 @@ export default function BlogLoading() {
 
       <div className="pt-24 pb-16">
         {/* Hero Section Skeleton */}
-        <section className="py-16 bg-gradient-to-b from-slate-900/50 to-transparent">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <div className="h-12 bg-slate-800 rounded-lg w-80 mx-auto mb-4 animate-pulse" />
-              <div className="h-6 bg-slate-800 rounded w-96 mx-auto animate-pulse" />
-            </div>
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <Skeleton className="h-12 w-96 mx-auto mb-6 bg-slate-800" />
+            <Skeleton className="h-6 w-[600px] mx-auto mb-8 bg-slate-800" />
+            <Skeleton className="h-12 w-full max-w-2xl mx-auto bg-slate-800" />
+          </div>
+        </div>
 
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* Search Bar Skeleton */}
-              <div className="h-12 bg-slate-800 rounded-lg animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Featured Post Skeleton */}
+          <section className="mb-16">
+            <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
+              <div className="md:flex">
+                <div className="md:w-1/2">
+                  <Skeleton className="w-full h-64 md:h-80 bg-slate-700" />
+                </div>
+                <div className="md:w-1/2 p-8">
+                  <Skeleton className="h-6 w-20 mb-4 bg-slate-700" />
+                  <Skeleton className="h-8 w-full mb-4 bg-slate-700" />
+                  <Skeleton className="h-4 w-full mb-2 bg-slate-700" />
+                  <Skeleton className="h-4 w-3/4 mb-6 bg-slate-700" />
+                  <div className="flex items-center space-x-4 mb-6">
+                    <Skeleton className="h-4 w-20 bg-slate-700" />
+                    <Skeleton className="h-4 w-24 bg-slate-700" />
+                    <Skeleton className="h-4 w-16 bg-slate-700" />
+                  </div>
+                  <Skeleton className="h-10 w-32 bg-slate-700" />
+                </div>
+              </div>
+            </Card>
+          </section>
 
-              {/* Category Filter Skeleton */}
-              <div className="flex flex-wrap gap-2 justify-center">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-8 bg-slate-800 rounded-full w-24 animate-pulse" />
+          <div className="grid gap-8 lg:grid-cols-4">
+            {/* Main Content Skeleton */}
+            <div className="lg:col-span-3">
+              {/* Categories Skeleton */}
+              <div className="flex flex-wrap gap-2 mb-8">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-8 w-24 bg-slate-800" />
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Main Content Skeleton */}
-            <div className="lg:col-span-3 space-y-12">
-              {/* Featured Post Skeleton */}
-              <section>
-                <div className="flex items-center mb-6">
-                  <div className="w-5 h-5 bg-slate-800 rounded mr-2 animate-pulse" />
-                  <div className="h-8 bg-slate-800 rounded w-48 animate-pulse" />
-                </div>
-
-                <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
-                  <div className="aspect-video bg-slate-700 animate-pulse" />
-                  <CardContent className="p-8">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="h-6 bg-slate-700 rounded-full w-20 animate-pulse" />
-                      <div className="h-4 bg-slate-700 rounded w-24 animate-pulse" />
-                      <div className="h-4 bg-slate-700 rounded w-20 animate-pulse" />
-                    </div>
-
-                    <div className="h-8 bg-slate-700 rounded w-full mb-4 animate-pulse" />
-                    <div className="h-4 bg-slate-700 rounded w-full mb-2 animate-pulse" />
-                    <div className="h-4 bg-slate-700 rounded w-3/4 mb-6 animate-pulse" />
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-slate-700 rounded-full mr-3 animate-pulse" />
-                        <div>
-                          <div className="h-4 bg-slate-700 rounded w-24 mb-1 animate-pulse" />
-                          <div className="h-3 bg-slate-700 rounded w-32 animate-pulse" />
-                        </div>
-                      </div>
-                      <div className="h-10 bg-slate-700 rounded w-28 animate-pulse" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
 
               {/* Blog Posts Grid Skeleton */}
-              <section>
-                <div className="h-8 bg-slate-800 rounded w-48 mb-6 animate-pulse" />
-
-                <div className="grid gap-8 md:grid-cols-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i} className="bg-slate-800/50 border-slate-700 overflow-hidden">
-                      <div className="aspect-video bg-slate-700 animate-pulse" />
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="h-5 bg-slate-700 rounded-full w-16 animate-pulse" />
-                          <div className="h-4 bg-slate-700 rounded w-20 animate-pulse" />
+              <div className="grid gap-8 md:grid-cols-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="bg-slate-800/50 border-slate-700">
+                    <div className="aspect-video">
+                      <Skeleton className="w-full h-full bg-slate-700" />
+                    </div>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-full mb-2 bg-slate-700" />
+                      <Skeleton className="h-4 w-full mb-1 bg-slate-700" />
+                      <Skeleton className="h-4 w-3/4 bg-slate-700" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Skeleton className="h-4 w-16 bg-slate-700" />
+                          <Skeleton className="h-4 w-20 bg-slate-700" />
                         </div>
+                        <Skeleton className="h-4 w-12 bg-slate-700" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-                        <div className="h-6 bg-slate-700 rounded w-full mb-3 animate-pulse" />
-                        <div className="h-4 bg-slate-700 rounded w-full mb-2 animate-pulse" />
-                        <div className="h-4 bg-slate-700 rounded w-3/4 mb-4 animate-pulse" />
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-slate-700 rounded-full mr-2 animate-pulse" />
-                            <div>
-                              <div className="h-4 bg-slate-700 rounded w-20 mb-1 animate-pulse" />
-                              <div className="h-3 bg-slate-700 rounded w-16 animate-pulse" />
-                            </div>
-                          </div>
-                          <div className="w-5 h-5 bg-slate-700 rounded animate-pulse" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </section>
+              {/* Load More Skeleton */}
+              <div className="text-center mt-12">
+                <Skeleton className="h-10 w-40 mx-auto bg-slate-800" />
+              </div>
             </div>
 
             {/* Sidebar Skeleton */}
@@ -108,28 +88,30 @@ export default function BlogLoading() {
               {/* Newsletter Signup Skeleton */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <div className="flex items-center">
-                    <div className="w-5 h-5 bg-slate-700 rounded mr-2 animate-pulse" />
-                    <div className="h-6 bg-slate-700 rounded w-32 animate-pulse" />
-                  </div>
-                  <div className="h-4 bg-slate-700 rounded w-full mt-2 animate-pulse" />
+                  <Skeleton className="h-6 w-32 mb-2 bg-slate-700" />
+                  <Skeleton className="h-4 w-full bg-slate-700" />
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="h-10 bg-slate-700 rounded animate-pulse" />
-                  <div className="h-10 bg-slate-700 rounded animate-pulse" />
-                  <div className="h-3 bg-slate-700 rounded w-3/4 animate-pulse" />
+                  <Skeleton className="h-10 w-full bg-slate-700" />
+                  <Skeleton className="h-10 w-full bg-slate-700" />
                 </CardContent>
               </Card>
 
-              {/* Popular Tags Skeleton */}
+              {/* Trending Topics Skeleton */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <div className="h-6 bg-slate-700 rounded w-32 animate-pulse" />
+                  <Skeleton className="h-6 w-40 bg-slate-700" />
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                      <div key={i} className="h-6 bg-slate-700 rounded-full w-16 animate-pulse" />
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/50">
+                        <div className="flex items-center">
+                          <Skeleton className="w-8 h-8 rounded-lg mr-3 bg-slate-600" />
+                          <Skeleton className="h-4 w-24 bg-slate-600" />
+                        </div>
+                        <Skeleton className="h-5 w-8 bg-slate-600" />
+                      </div>
                     ))}
                   </div>
                 </CardContent>
@@ -138,31 +120,19 @@ export default function BlogLoading() {
               {/* Recent Posts Skeleton */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <div className="h-6 bg-slate-700 rounded w-32 animate-pulse" />
+                  <Skeleton className="h-6 w-32 bg-slate-700" />
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="border-b border-slate-700 last:border-0 pb-3 last:pb-0">
-                        <div className="h-4 bg-slate-700 rounded w-full mb-1 animate-pulse" />
-                        <div className="h-3 bg-slate-700 rounded w-20 animate-pulse" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Categories Skeleton */}
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader>
-                  <div className="h-6 bg-slate-700 rounded w-24 animate-pulse" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <div className="h-4 bg-slate-700 rounded w-20 animate-pulse" />
-                        <div className="h-5 bg-slate-700 rounded-full w-8 animate-pulse" />
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-3 rounded-lg">
+                        <Skeleton className="h-4 w-full mb-2 bg-slate-700" />
+                        <Skeleton className="h-4 w-3/4 mb-2 bg-slate-700" />
+                        <div className="flex items-center">
+                          <Skeleton className="h-3 w-16 bg-slate-700" />
+                          <span className="mx-2 text-slate-600">•</span>
+                          <Skeleton className="h-3 w-12 bg-slate-700" />
+                        </div>
                       </div>
                     ))}
                   </div>
