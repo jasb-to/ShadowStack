@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/database"
 
-// Client-side Supabase client
+// Client-side Supabase client for use in Client Components
 export function createClient() {
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,7 +11,7 @@ export function createClient() {
   )
 }
 
-// Server-side Supabase client (for Server Components, Server Actions, Route Handlers)
+// Server-side Supabase client for use in Server Components, Server Actions, and Route Handlers
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
 

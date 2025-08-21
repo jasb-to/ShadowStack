@@ -1,81 +1,104 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Search, Book, MessageCircle, Mail, Phone, ChevronRight, Star, Clock, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+  Search,
+  Shield,
+  Zap,
+  Settings,
+  CreditCard,
+  Book,
+  MessageCircle,
+  Mail,
+  Phone,
+  Clock,
+  ChevronRight,
+  Star,
+  Users,
+  Lightbulb,
+} from "lucide-react"
+import Link from "next/link"
 
 const categories = [
   {
-    title: "Getting Started",
-    description: "Learn the basics of ShadowStack",
-    icon: Book,
-    articles: [
-      { title: "Quick Start Guide", views: "2.1k", time: "5 min read" },
-      { title: "Setting Up Your First Wallet", views: "1.8k", time: "3 min read" },
-      { title: "Understanding Alert Types", views: "1.5k", time: "4 min read" },
-    ],
+    icon: Shield,
+    title: "Security & Monitoring",
+    description: "Wallet monitoring, threat detection, and security alerts",
+    count: 12,
+    color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   {
-    title: "Wallet Monitoring",
-    description: "Configure and manage wallet monitoring",
-    icon: Users,
-    articles: [
-      { title: "Adding Multiple Wallets", views: "1.2k", time: "6 min read" },
-      { title: "Blockchain Support", views: "980", time: "3 min read" },
-      { title: "Custom Alert Rules", views: "750", time: "8 min read" },
-    ],
+    icon: Settings,
+    title: "Account & Settings",
+    description: "Profile management, notifications, and preferences",
+    count: 8,
+    color: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   {
-    title: "AI Features",
-    description: "Leverage AI-powered security insights",
-    icon: Star,
-    articles: [
-      { title: "AI Anomaly Detection", views: "890", time: "7 min read" },
-      { title: "Pattern Analysis", views: "650", time: "5 min read" },
-      { title: "Smart Summaries", views: "420", time: "4 min read" },
-    ],
+    icon: CreditCard,
+    title: "Billing & Subscriptions",
+    description: "Payment methods, invoices, and subscription management",
+    count: 6,
+    color: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  },
+  {
+    icon: Zap,
+    title: "API & Integrations",
+    description: "Webhooks, API keys, and third-party integrations",
+    count: 10,
+    color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   },
 ]
 
 const popularArticles = [
   {
-    title: "How to Set Up Real-Time Alerts",
-    description: "Configure instant notifications for your crypto wallets",
-    category: "Getting Started",
-    views: "3.2k",
-    time: "8 min read",
-    rating: 4.9,
+    title: "Getting Started with Wallet Monitoring",
+    description: "Learn how to add and configure your first crypto wallet for monitoring",
+    category: "Security & Monitoring",
+    readTime: "5 min read",
+    views: "2.1k views",
   },
   {
-    title: "Understanding Threat Severity Levels",
-    description: "Learn how we classify and prioritize security threats",
-    category: "Security",
-    views: "2.8k",
-    time: "6 min read",
-    rating: 4.8,
+    title: "Understanding Security Alert Types",
+    description: "Complete guide to different types of security alerts and their meanings",
+    category: "Security & Monitoring",
+    readTime: "8 min read",
+    views: "1.8k views",
+  },
+  {
+    title: "Setting Up Email Notifications",
+    description: "Configure email alerts for real-time security notifications",
+    category: "Account & Settings",
+    readTime: "3 min read",
+    views: "1.5k views",
   },
   {
     title: "API Integration Guide",
-    description: "Integrate ShadowStack with your existing systems",
-    category: "Development",
-    views: "2.1k",
-    time: "12 min read",
-    rating: 4.7,
+    description: "How to integrate ShadowStack with your existing security infrastructure",
+    category: "API & Integrations",
+    readTime: "12 min read",
+    views: "1.2k views",
   },
   {
-    title: "Troubleshooting Common Issues",
-    description: "Solutions to frequently encountered problems",
-    category: "Support",
-    views: "1.9k",
-    time: "10 min read",
-    rating: 4.6,
+    title: "Subscription Plans Explained",
+    description: "Compare features and choose the right plan for your organization",
+    category: "Billing & Subscriptions",
+    readTime: "6 min read",
+    views: "980 views",
   },
+]
+
+const quickLinks = [
+  { title: "System Status", href: "/status", icon: Shield },
+  { title: "API Documentation", href: "/docs", icon: Book },
+  { title: "Community Forum", href: "/community", icon: Users },
+  { title: "Feature Requests", href: "/feedback", icon: Lightbulb },
 ]
 
 export default function HelpPage() {
@@ -87,115 +110,92 @@ export default function HelpPage() {
 
       <div className="pt-24 pb-16">
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10">
-          <div className="container px-4 md:px-6">
-            <div className="text-center space-y-6">
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent">
-                How can we help you?
-              </h1>
-              <p className="mx-auto max-w-[600px] text-slate-300 text-lg">
-                Find answers, get support, and learn how to make the most of ShadowStack
-              </p>
+        <section className="py-16 bg-gradient-to-b from-slate-900/50 to-transparent">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">How can we help you?</h1>
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+              Find answers to your questions, learn about our features, and get the most out of ShadowStack
+            </p>
 
-              {/* Search Bar */}
-              <div className="max-w-2xl mx-auto relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <Input
-                  type="text"
-                  placeholder="Search for help articles, guides, and more..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg bg-slate-800/50 border-slate-700 text-white placeholder-slate-400 focus:border-emerald-400"
-                />
-              </div>
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search for help articles, guides, and more..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-6 text-lg bg-slate-800/50 border-slate-700 text-white placeholder-slate-400 focus:border-emerald-500"
+              />
+              <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700">
+                Search
+              </Button>
             </div>
           </div>
         </section>
 
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-8 lg:grid-cols-4">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-12">
-              {/* Popular Articles */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Categories */}
               <section>
-                <div className="flex items-center gap-2 mb-6">
-                  <Star className="w-6 h-6 text-yellow-400" />
-                  <h2 className="text-2xl font-bold text-white">Popular Articles</h2>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                  {popularArticles.map((article, index) => (
+                <h2 className="text-2xl font-bold text-white mb-6">Browse by Category</h2>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {categories.map((category, index) => (
                     <Card
                       key={index}
-                      className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors cursor-pointer"
+                      className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors cursor-pointer group"
                     >
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="text-emerald-400 border-emerald-400/30">
-                            {article.category}
-                          </Badge>
-                          <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="w-4 h-4 fill-current" />
-                            <span className="text-sm">{article.rating}</span>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${category.color}`}>
+                            <category.icon className="w-6 h-6" />
                           </div>
+                          <Badge variant="outline" className="border-slate-600 text-slate-300">
+                            {category.count} articles
+                          </Badge>
                         </div>
-                        <CardTitle className="text-white hover:text-emerald-400 transition-colors">
-                          {article.title}
-                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <CardDescription className="text-slate-300 mb-4">{article.description}</CardDescription>
-                        <div className="flex items-center gap-4 text-sm text-slate-400">
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            {article.views} views
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            {article.time}
-                          </div>
-                        </div>
+                        <CardTitle className="text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                          {category.title}
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">{category.description}</CardDescription>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               </section>
 
-              {/* Categories */}
+              {/* Popular Articles */}
               <section>
-                <h2 className="text-2xl font-bold text-white mb-6">Browse by Category</h2>
-                <div className="space-y-6">
-                  {categories.map((category, index) => (
-                    <Card key={index} className="bg-slate-800/50 border-slate-700">
-                      <CardHeader>
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                            <category.icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-white">{category.title}</CardTitle>
-                            <CardDescription className="text-slate-300">{category.description}</CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {category.articles.map((article, articleIndex) => (
-                            <div
-                              key={articleIndex}
-                              className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer group"
-                            >
-                              <div>
-                                <h4 className="text-white group-hover:text-emerald-400 transition-colors">
-                                  {article.title}
-                                </h4>
-                                <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
-                                  <span>{article.views} views</span>
-                                  <span>{article.time}</span>
-                                </div>
-                              </div>
-                              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                <h2 className="text-2xl font-bold text-white mb-6">Popular Articles</h2>
+                <div className="space-y-4">
+                  {popularArticles.map((article, index) => (
+                    <Card
+                      key={index}
+                      className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors cursor-pointer group"
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                              {article.title}
+                            </h3>
+                            <p className="text-slate-400 mb-3">{article.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-slate-500">
+                              <Badge variant="outline" className="border-slate-600 text-slate-400">
+                                {article.category}
+                              </Badge>
+                              <span className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {article.readTime}
+                              </span>
+                              <span>{article.views}</span>
                             </div>
-                          ))}
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors ml-4" />
                         </div>
                       </CardContent>
                     </Card>
@@ -209,30 +209,37 @@ export default function HelpPage() {
               {/* Contact Support */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="text-white">Need More Help?</CardTitle>
-                  <CardDescription className="text-slate-300">
-                    Can't find what you're looking for? Our support team is here to help.
-                  </CardDescription>
+                  <CardTitle className="text-white flex items-center">
+                    <MessageCircle className="w-5 h-5 mr-2 text-emerald-400" />
+                    Need More Help?
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Start Live Chat
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email Support
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Schedule Call
-                  </Button>
+                  <p className="text-slate-400 text-sm">
+                    Can't find what you're looking for? Our support team is here to help.
+                  </p>
+                  <div className="space-y-3">
+                    <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700">
+                      <Link href="/contact">
+                        <Mail className="w-4 h-4 mr-2" />
+                        Contact Support
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
+                    >
+                      <Link href="tel:+1-555-0123">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Call Us
+                      </Link>
+                    </Button>
+                  </div>
+                  <div className="text-xs text-slate-500 space-y-1">
+                    <p>📧 Email: 24/7 response</p>
+                    <p>📞 Phone: Mon-Fri 9AM-6PM EST</p>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -241,51 +248,38 @@ export default function HelpPage() {
                 <CardHeader>
                   <CardTitle className="text-white">Quick Links</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Link
-                    href="/docs"
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
-                  >
-                    <span>API Documentation</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/demo"
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
-                  >
-                    <span>Live Demo</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/pricing"
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
-                  >
-                    <span>Pricing Plans</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="flex items-center justify-between p-2 rounded hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
-                  >
-                    <span>Contact Sales</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
+                <CardContent>
+                  <div className="space-y-3">
+                    {quickLinks.map((link, index) => (
+                      <Link
+                        key={index}
+                        href={link.href}
+                        className="flex items-center text-slate-400 hover:text-white transition-colors group"
+                      >
+                        <link.icon className="w-4 h-4 mr-3 text-slate-500 group-hover:text-emerald-400" />
+                        <span className="text-sm">{link.title}</span>
+                        <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
-              {/* Status */}
+              {/* Customer Satisfaction */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="text-white">System Status</CardTitle>
+                  <CardTitle className="text-white">Customer Satisfaction</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="text-slate-300">All systems operational</span>
+                  <div className="text-center space-y-2">
+                    <div className="flex justify-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="w-5 h-5 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-2xl font-bold text-white">4.9/5</p>
+                    <p className="text-sm text-slate-400">Based on 1,200+ reviews</p>
                   </div>
-                  <Link href="/status" className="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block">
-                    View status page →
-                  </Link>
                 </CardContent>
               </Card>
             </div>

@@ -3,95 +3,193 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Shield, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { Menu, X, Shield, ChevronDown, Settings, LogOut, Bell, Search } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import type { User } from "@supabase/supabase-js"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
+
+const navigation = [
+  { name: "Features", href: "/#features" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Demo", href: "/demo" },
+  { name: "Docs", href: "/docs" },
+  { name: "Blog", href: "/blog" },
+]
+
+const productLinks = [
+  { name: "Wallet Monitoring", href: "/features/monitoring" },
+  { name: "Threat Detection", href: "/features/detection" },
+  { name: "API Integration", href: "/features/api" },
+  { name: "Proof of Reserves", href: "/features/reserves" },
+]
+
+const resourceLinks = [
+  { name: "Documentation", href: "/docs" },
+  { name: "Help Center", href: "/help" },
+  { name: "Community", href: "/community" },
+  { name: "Status", href: "/status" },
+]
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [loading, setLoading] = useState(true)
   const pathname = usePathname()
 
   useEffect(() => {
     // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       setUser(user)
-    })
+      setLoading(false)
+    }
+
+    getUser()
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  const isActive = (path: string) => {
-    if (path === "/" && pathname === "/") return true
-    if (path !== "/" && pathname.startsWith(path)) return true
-    return false
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
   }
 
-  const navigation = [
-    { name: "Features", href: "/#features" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Demo", href: "/demo" },
-    { name: "Docs", href: "/docs" },
-    { name: "Blog", href: "/blog" },
-  ]
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname.startsWith(href)
+  }
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-      <div className="container px-4 md:px-6">
+      <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <Shield className="h-8 w-8 text-emerald-400" />
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
             <span className="text-xl font-bold text-white">ShadowStack</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            {/* Product Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  Product
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700">
+                {productLinks.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link href={item.href} className="text-slate-300 hover:text-white hover:bg-slate-800">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`text-sm font-medium transition-colors hover:text-emerald-400 ${
-                  isActive(item.href) ? "text-emerald-400" : "text-slate-300"
+                className={`text-sm font-medium transition-colors ${
+                  isActive(item.href) ? "text-emerald-400" : "text-slate-300 hover:text-white"
                 }`}
               >
                 {item.name}
               </Link>
             ))}
+
+            {/* Resources Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  Resources
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700">
+                {resourceLinks.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link href={item.href} className="text-slate-300 hover:text-white hover:bg-slate-800">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* Desktop Auth Buttons */}
+          {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Button asChild variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                  <Link href="/dashboard">Dashboard</Link>
+            {loading ? (
+              <div className="w-8 h-8 bg-slate-800 rounded animate-pulse" />
+            ) : user ? (
+              <div className="flex items-center space-x-3">
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  <Search className="w-4 h-4" />
                 </Button>
-                <Button
-                  onClick={() => supabase.auth.signOut()}
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
-                >
-                  Sign Out
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                  <Bell className="w-4 h-4" />
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Account
+                      <ChevronDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-slate-900 border-slate-700" align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/settings" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <Button asChild variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
                   <Link href="/sign-in">Sign In</Link>
                 </Button>
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-                >
+                <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   <Link href="/sign-up">Get Started</Link>
                 </Button>
               </div>
@@ -103,47 +201,56 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-slate-300 hover:text-white hover:bg-slate-800"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800">
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-800 py-4">
+            <div className="space-y-2">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block px-3 py-2 text-base font-medium transition-colors hover:text-emerald-400 hover:bg-slate-800 rounded-md ${
-                    isActive(item.href) ? "text-emerald-400 bg-slate-800" : "text-slate-300"
+                  className={`block px-3 py-2 text-base font-medium transition-colors ${
+                    isActive(item.href)
+                      ? "text-emerald-400 bg-slate-800/50"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
                   }`}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
 
-              <div className="border-t border-slate-700 pt-4 mt-4">
+              <div className="border-t border-slate-800 pt-4 mt-4">
                 {user ? (
                   <div className="space-y-2">
                     <Link
                       href="/dashboard"
-                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
-                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
                       Dashboard
                     </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
                     <button
                       onClick={() => {
-                        supabase.auth.signOut()
-                        setIsOpen(false)
+                        handleSignOut()
+                        setMobileMenuOpen(false)
                       }}
-                      className="block w-full text-left px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
+                      className="block w-full text-left px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
                     >
                       Sign Out
                     </button>
@@ -152,15 +259,15 @@ export function Navbar() {
                   <div className="space-y-2">
                     <Link
                       href="/sign-in"
-                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800 rounded-md"
-                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/sign-up"
-                      className="block px-3 py-2 text-base font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-md text-center"
-                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 text-base font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md mx-3"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
                       Get Started
                     </Link>
