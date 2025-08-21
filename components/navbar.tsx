@@ -2,130 +2,119 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Building2, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
-
-const navigation = [
-  { name: "Features", href: "/#features" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Demo", href: "/demo" },
-  { name: "Docs", href: "/docs" },
-  { name: "About", href: "/about" },
-]
+import { Menu, X, Shield } from "lucide-react"
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
-      <nav className="flex items-center justify-between p-6 lg:px-8 max-w-7xl mx-auto" aria-label="Global">
-        <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
+    <nav className="fixed top-0 w-full bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <Shield className="h-8 w-8 text-emerald-500" />
             <span className="text-xl font-bold text-white">ShadowStack</span>
           </Link>
-        </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-slate-400"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <span className="sr-only">Open main menu</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-12">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`text-sm font-semibold leading-6 transition-colors ${
-                pathname === item.href ? "text-emerald-400" : "text-slate-300 hover:text-emerald-400"
-              }`}
-            >
-              {item.name}
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/pricing" className="text-slate-300 hover:text-white transition-colors">
+              Pricing
             </Link>
-          ))}
+            <Link href="/demo" className="text-slate-300 hover:text-white transition-colors">
+              Demo
+            </Link>
+            <Link href="/docs" className="text-slate-300 hover:text-white transition-colors">
+              Docs
+            </Link>
+            <Link href="/blog" className="text-slate-300 hover:text-white transition-colors">
+              Blog
+            </Link>
+            <Link href="/help" className="text-slate-300 hover:text-white transition-colors">
+              Help
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link href="/sign-in">
+              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/sign-up">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Get Started</Button>
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-slate-300 hover:text-white"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-4">
-          <ModeToggle />
-          <Link
-            href="/sign-in"
-            className="text-sm font-semibold leading-6 text-slate-300 hover:text-emerald-400 transition-colors"
-          >
-            Log in
-          </Link>
-          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Link href="/sign-up">Get started</Link>
-          </Button>
-        </div>
-      </nav>
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="fixed inset-0 z-50" />
-          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-slate-950 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-slate-800">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">ShadowStack</span>
-              </Link>
-              <button
-                type="button"
-                className="-m-2.5 rounded-md p-2.5 text-slate-400"
-                onClick={() => setMobileMenuOpen(false)}
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-slate-900 rounded-lg mt-2">
+              <Link
+                href="/pricing"
+                className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
               >
-                <span className="sr-only">Close menu</span>
-                <X className="h-6 w-6" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-slate-800">
-                <div className="space-y-2 py-6">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors ${
-                        pathname === item.href
-                          ? "text-emerald-400 bg-slate-800"
-                          : "text-slate-300 hover:text-emerald-400 hover:bg-slate-800"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-                <div className="py-6">
-                  <Link
-                    href="/sign-in"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-slate-300 hover:text-emerald-400 hover:bg-slate-800 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-emerald-600 hover:bg-emerald-700 transition-colors mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get started
-                  </Link>
-                </div>
+                Pricing
+              </Link>
+              <Link
+                href="/demo"
+                className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Demo
+              </Link>
+              <Link
+                href="/docs"
+                className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Docs
+              </Link>
+              <Link
+                href="/blog"
+                className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Blog
+              </Link>
+              <Link
+                href="/help"
+                className="block px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Help
+              </Link>
+              <div className="border-t border-slate-700 pt-4 mt-4">
+                <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" className="w-full text-slate-300 hover:text-white hover:bg-slate-800 mb-2">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/sign-up" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">Get Started</Button>
+                </Link>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </header>
+        )}
+      </div>
+    </nav>
   )
 }

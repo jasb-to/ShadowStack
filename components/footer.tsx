@@ -1,119 +1,103 @@
 "use client"
 
 import Link from "next/link"
-import { Building2, Mail, MapPin } from "lucide-react"
-
-const navigation = {
-  product: [
-    { name: "Features", href: "/#features" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Demo", href: "/demo" },
-    { name: "Documentation", href: "/docs" },
-  ],
-  company: [
-    { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
-    { name: "Blog", href: "/blog" },
-  ],
-  legal: [
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-    { name: "Cookie Policy", href: "/cookies" },
-    { name: "Refund Policy", href: "/refund-policy" },
-  ],
-  support: [{ name: "Help Center", href: "/help" }],
-}
+import { Shield, Twitter, Github, Linkedin } from "lucide-react"
 
 export function Footer() {
   return (
     <footer className="bg-slate-900 border-t border-slate-800">
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Logo and Description */}
+          <div className="col-span-1 md:col-span-2">
+            <Link href="/" className="flex items-center space-x-2 mb-4">
+              <Shield className="h-8 w-8 text-emerald-500" />
               <span className="text-xl font-bold text-white">ShadowStack</span>
             </Link>
-            <p className="text-sm leading-6 text-slate-300">
-              Enterprise-grade security monitoring for crypto exchanges. Protect your hot wallets and build user trust
-              with real-time threat detection.
+            <p className="text-slate-400 mb-4 max-w-md">
+              Advanced threat monitoring for crypto exchanges and fintech companies. Stay ahead of security threats with
+              real-time intelligence.
             </p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <Mail className="w-4 h-4" />
-                <a href="mailto:info@shadowsignals.live" className="hover:text-emerald-400">
-                  info@shadowsignals.live
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <MapPin className="w-4 h-4" />
-                <span>Birmingham, United Kingdom</span>
-              </div>
+            <div className="flex space-x-4">
+              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Twitter className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Github className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
+                <Linkedin className="h-5 w-5" />
+              </Link>
             </div>
           </div>
-          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">Product</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.product.map((item) => (
-                    <li key={item.name}>
-                      <Link href={item.href} className="text-sm leading-6 text-slate-300 hover:text-emerald-400">
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">Company</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.company.map((item) => (
-                    <li key={item.name}>
-                      <Link href={item.href} className="text-sm leading-6 text-slate-300 hover:text-emerald-400">
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">Support</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.support.map((item) => (
-                    <li key={item.name}>
-                      <Link href={item.href} className="text-sm leading-6 text-slate-300 hover:text-emerald-400">
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">Legal</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {navigation.legal.map((item) => (
-                    <li key={item.name}>
-                      <Link href={item.href} className="text-sm leading-6 text-slate-300 hover:text-emerald-400">
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+
+          {/* Product Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Product</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/pricing" className="text-slate-400 hover:text-white transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link href="/demo" className="text-slate-400 hover:text-white transition-colors">
+                  Demo
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs" className="text-slate-400 hover:text-white transition-colors">
+                  Documentation
+                </Link>
+              </li>
+              <li>
+                <Link href="/help" className="text-slate-400 hover:text-white transition-colors">
+                  Help Center
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/about" className="text-slate-400 hover:text-white transition-colors">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="text-slate-400 hover:text-white transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-slate-400 hover:text-white transition-colors">
+                  Contact
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
-        <div className="mt-16 border-t border-slate-800 pt-8 sm:mt-20 lg:mt-24">
-          <div className="flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-xs leading-5 text-slate-400">&copy; 2024 ShadowStack Ltd. All rights reserved.</p>
-            <div className="mt-4 sm:mt-0 flex items-center space-x-6">
-              <span className="text-xs text-slate-400">SOC 2 Type II Compliant</span>
-              <span className="text-xs text-slate-400">ISO 27001 Certified</span>
+
+        {/* Bottom Section */}
+        <div className="border-t border-slate-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-slate-400 text-sm">© 2024 ShadowStack. All rights reserved.</p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/privacy" className="text-slate-400 hover:text-white text-sm transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-slate-400 hover:text-white text-sm transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/cookies" className="text-slate-400 hover:text-white text-sm transition-colors">
+                Cookie Policy
+              </Link>
+              <Link href="/refund-policy" className="text-slate-400 hover:text-white text-sm transition-colors">
+                Refund Policy
+              </Link>
             </div>
           </div>
         </div>
