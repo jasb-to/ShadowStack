@@ -1,260 +1,250 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Calendar, User, ArrowRight, Star, TrendingUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import Image from "next/image"
+import { Search, Calendar, Clock, User, ArrowRight, Tag } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+
+const categories = [
+  { name: "All", count: 24 },
+  { name: "Security", count: 8 },
+  { name: "Product Updates", count: 6 },
+  { name: "Industry News", count: 5 },
+  { name: "Tutorials", count: 3 },
+  { name: "Company", count: 2 },
+]
 
 const featuredPost = {
-  id: 1,
-  title: "The Evolution of Crypto Security: 2024 Threat Landscape Analysis",
+  title: "The Rise of Crypto Security Threats in 2024",
   excerpt:
-    "An in-depth look at the emerging security threats facing cryptocurrency exchanges and DeFi protocols in 2024, including new attack vectors and defensive strategies.",
+    "An in-depth analysis of the evolving threat landscape in cryptocurrency and how organizations can protect themselves.",
   author: "Sarah Chen",
-  date: "March 15, 2024",
-  readTime: "12 min read",
-  category: "Security Analysis",
-  image: "/placeholder.svg?height=400&width=800&text=Crypto+Security+2024",
-  featured: true,
+  date: "2024-01-15",
+  readTime: "8 min read",
+  category: "Security",
+  image: "/placeholder.jpg",
+  href: "/blog/crypto-security-threats-2024",
 }
 
 const blogPosts = [
   {
-    id: 2,
-    title: "Building Resilient Hot Wallet Infrastructure",
-    excerpt:
-      "Best practices for designing and maintaining secure hot wallet systems that can withstand sophisticated attacks while maintaining operational efficiency.",
+    title: "How to Set Up Real-Time Breach Monitoring",
+    excerpt: "A step-by-step guide to configuring ShadowStack for maximum security coverage.",
     author: "Mike Rodriguez",
-    date: "March 10, 2024",
-    readTime: "8 min read",
-    category: "Infrastructure",
-    views: 1250,
+    date: "2024-01-12",
+    readTime: "5 min read",
+    category: "Tutorials",
+    image: "/placeholder.jpg",
+    href: "/blog/setup-breach-monitoring",
   },
   {
-    id: 3,
-    title: "AI-Powered Threat Detection: Beyond Traditional Monitoring",
-    excerpt:
-      "How machine learning and artificial intelligence are revolutionizing the way we detect and respond to security threats in real-time.",
-    author: "Dr. Emily Watson",
-    date: "March 5, 2024",
-    readTime: "10 min read",
-    category: "AI & Machine Learning",
-    views: 980,
+    title: "ShadowStack 2.0: Enhanced AI Detection",
+    excerpt: "Introducing our new AI-powered threat detection system with improved accuracy and faster response times.",
+    author: "Alex Thompson",
+    date: "2024-01-10",
+    readTime: "4 min read",
+    category: "Product Updates",
+    image: "/placeholder.jpg",
+    href: "/blog/shadowstack-2-0-ai-detection",
   },
   {
-    id: 4,
-    title: "The Psychology of Social Engineering in Crypto",
-    excerpt:
-      "Understanding the human factors that make cryptocurrency organizations vulnerable to social engineering attacks and how to build a security-aware culture.",
-    author: "James Thompson",
-    date: "February 28, 2024",
+    title: "Understanding Telegram Channel Monitoring",
+    excerpt: "Learn how threat actors use Telegram and how to monitor these channels effectively.",
+    author: "Jennifer Liu",
+    date: "2024-01-08",
+    readTime: "6 min read",
+    category: "Security",
+    image: "/placeholder.jpg",
+    href: "/blog/telegram-channel-monitoring",
+  },
+  {
+    title: "Building a Security-First Culture",
+    excerpt: "Best practices for creating a security-minded organization from the ground up.",
+    author: "David Park",
+    date: "2024-01-05",
     readTime: "7 min read",
-    category: "Social Engineering",
-    views: 850,
+    category: "Industry News",
+    image: "/placeholder.jpg",
+    href: "/blog/security-first-culture",
   },
   {
-    id: 5,
-    title: "Incident Response Playbook for Crypto Exchanges",
-    excerpt:
-      "A comprehensive guide to developing and executing effective incident response procedures specifically tailored for cryptocurrency trading platforms.",
-    author: "Lisa Park",
-    date: "February 20, 2024",
-    readTime: "15 min read",
-    category: "Incident Response",
-    views: 720,
-  },
-  {
-    id: 6,
-    title: "Regulatory Compliance in the Age of DeFi",
-    excerpt:
-      "Navigating the complex regulatory landscape surrounding decentralized finance while maintaining security and user privacy.",
-    author: "Robert Kumar",
-    date: "February 15, 2024",
+    title: "API Security: Common Vulnerabilities",
+    excerpt: "Identifying and preventing the most common API security vulnerabilities in modern applications.",
+    author: "Sarah Chen",
+    date: "2024-01-03",
     readTime: "9 min read",
-    category: "Compliance",
-    views: 650,
+    category: "Security",
+    image: "/placeholder.jpg",
+    href: "/blog/api-security-vulnerabilities",
   },
   {
-    id: 7,
-    title: "Multi-Signature Wallet Security: Advanced Configurations",
-    excerpt:
-      "Deep dive into advanced multi-signature wallet configurations, threshold schemes, and best practices for institutional-grade security.",
-    author: "Alex Turner",
-    date: "February 8, 2024",
-    readTime: "11 min read",
-    category: "Wallet Security",
-    views: 590,
+    title: "Year in Review: 2023 Security Incidents",
+    excerpt: "A comprehensive analysis of major security incidents from 2023 and lessons learned.",
+    author: "Mike Rodriguez",
+    date: "2023-12-28",
+    readTime: "12 min read",
+    category: "Industry News",
+    image: "/placeholder.jpg",
+    href: "/blog/2023-security-incidents-review",
   },
 ]
 
-const categories = [
-  "All Posts",
-  "Security Analysis",
-  "Infrastructure",
-  "AI & Machine Learning",
-  "Social Engineering",
-  "Incident Response",
-  "Compliance",
-  "Wallet Security",
-]
-
-const trendingTopics = [
-  { topic: "Zero-Knowledge Proofs", posts: 12 },
-  { topic: "MEV Protection", posts: 8 },
-  { topic: "Cross-Chain Security", posts: 15 },
-  { topic: "Quantum Resistance", posts: 6 },
-  { topic: "Flash Loan Attacks", posts: 10 },
+const recentPosts = [
+  { title: "Quick Security Audit Checklist", href: "/blog/security-audit-checklist", date: "2024-01-14" },
+  { title: "New Integration: Slack Alerts", href: "/blog/slack-integration", date: "2024-01-11" },
+  { title: "Compliance Made Simple", href: "/blog/compliance-guide", date: "2024-01-09" },
 ]
 
 export default function BlogPage() {
+  const [selectedCategory, setSelectedCategory] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All Posts")
 
   const filteredPosts = blogPosts.filter((post) => {
+    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesCategory = selectedCategory === "All Posts" || post.category === selectedCategory
-
-    return matchesSearch && matchesCategory
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesCategory && matchesSearch
   })
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <Navbar />
-
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 pt-20">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Security Insights & Analysis
-            </h1>
-            <p className="text-xl text-slate-300 mb-8">
-              Expert perspectives on cryptocurrency security, threat intelligence, and industry best practices
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Security Insights & Updates</h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+              Stay informed with the latest security trends, product updates, and expert insights from the ShadowStack
+              team.
             </p>
 
-            {/* Search Bar */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+            {/* Search */}
+            <div className="max-w-md mx-auto relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search articles, topics, or authors..."
+                placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-4 text-lg bg-slate-800/50 border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/20 text-white placeholder-slate-400"
+                className="pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400"
               />
             </div>
           </div>
-
-          {/* Featured Post */}
-          <Card className="max-w-4xl mx-auto bg-slate-800/50 border-slate-700 overflow-hidden">
-            <div className="md:flex">
-              <div className="md:w-1/3">
-                <div className="h-48 md:h-full bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
-                  <Star className="h-16 w-16 text-emerald-400" />
-                </div>
-              </div>
-              <div className="md:w-2/3 p-8">
-                <Badge className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white border-0 mb-4">
-                  Featured Article
-                </Badge>
-                <h2 className="text-2xl font-bold text-white mb-4 hover:text-emerald-400 transition-colors cursor-pointer">
-                  {featuredPost.title}
-                </h2>
-                <p className="text-slate-300 mb-6">{featuredPost.excerpt}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-sm text-slate-400">
-                    <div className="flex items-center space-x-1">
-                      <User className="h-4 w-4" />
-                      <span>{featuredPost.author}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{featuredPost.date}</span>
-                    </div>
-                    <span>{featuredPost.readTime}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-                  >
-                    Read More
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* Featured Post */}
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Featured Article</h2>
+              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="md:flex">
+                  <div className="md:w-1/2">
+                    <div className="relative h-64 md:h-full">
+                      <Image
+                        src={featuredPost.image || "/placeholder.svg"}
+                        alt={featuredPost.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="md:w-1/2 p-8">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Badge variant="secondary">{featuredPost.category}</Badge>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Featured</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400">
+                      <Link href={featuredPost.href}>{featuredPost.title}</Link>
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{featuredPost.excerpt}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <User className="w-4 h-4" />
+                          <span>{featuredPost.author}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(featuredPost.date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{featuredPost.readTime}</span>
+                        </div>
+                      </div>
+                      <Link href={featuredPost.href}>
+                        <Button variant="ghost" size="sm" className="group">
+                          Read more
+                          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
             {/* Category Filter */}
             <div className="mb-8">
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
                   <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
+                    key={category.name}
+                    variant={selectedCategory === category.name ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                    className={
-                      selectedCategory === category
-                        ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white border-0"
-                        : "border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
-                    }
+                    onClick={() => setSelectedCategory(category.name)}
+                    className="flex items-center space-x-1"
                   >
-                    {category}
+                    <span>{category.name}</span>
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {category.count}
+                    </Badge>
                   </Button>
                 ))}
               </div>
             </div>
 
             {/* Blog Posts Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {filteredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-                        {post.category}
-                      </Badge>
-                      <div className="flex items-center text-xs text-slate-400">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        {post.views}
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {filteredPosts.map((post, index) => (
+                <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow group">
+                  <div className="relative h-48">
+                    <Image
+                      src={post.image || "/placeholder.svg"}
+                      alt={post.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Badge variant="secondary">{post.category}</Badge>
                     </div>
-                    <CardTitle className="text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
-                      {post.title}
-                    </CardTitle>
-                    <CardDescription className="text-slate-400 line-clamp-3">{post.excerpt}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-slate-400">
-                      <div className="flex items-center space-x-4">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400">
+                      <Link href={post.href}>{post.title}</Link>
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{post.excerpt}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-1">
-                          <User className="h-3 w-3" />
+                          <User className="w-4 h-4" />
                           <span>{post.author}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{post.date}</span>
+                          <Clock className="w-4 h-4" />
+                          <span>{post.readTime}</span>
                         </div>
                       </div>
-                      <span>{post.readTime}</span>
+                      <span>{new Date(post.date).toLocaleDateString()}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -263,7 +253,7 @@ export default function BlogPage() {
 
             {/* Load More */}
             <div className="text-center mt-12">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent">
+              <Button variant="outline" size="lg">
                 Load More Articles
               </Button>
             </div>
@@ -271,78 +261,81 @@ export default function BlogPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
+            <div className="sticky top-8 space-y-8">
               {/* Newsletter Signup */}
-              <Card className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-emerald-500/20">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-white">Stay Updated</CardTitle>
-                  <CardDescription className="text-slate-300">
-                    Get the latest security insights delivered to your inbox
-                  </CardDescription>
+                  <CardTitle className="text-lg">Stay Updated</CardTitle>
+                  <CardDescription>Get the latest security insights delivered to your inbox.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="bg-slate-800/50 border-slate-700 text-white placeholder-slate-400"
-                  />
-                  <Button className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0">
-                    Subscribe
-                  </Button>
+                  <Input type="email" placeholder="Enter your email" />
+                  <Button className="w-full">Subscribe</Button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">No spam. Unsubscribe at any time.</p>
                 </CardContent>
               </Card>
 
-              {/* Trending Topics */}
-              <Card className="bg-slate-800/50 border-slate-700">
+              {/* Recent Posts */}
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-emerald-400" />
-                    Trending Topics
-                  </CardTitle>
+                  <CardTitle className="text-lg">Recent Posts</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {trendingTopics.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-slate-300 hover:text-emerald-400 transition-colors cursor-pointer">
-                          {item.topic}
-                        </span>
-                        <Badge variant="secondary" className="bg-slate-700 text-slate-400">
-                          {item.posts}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+                <CardContent className="space-y-4">
+                  {recentPosts.map((post, index) => (
+                    <div
+                      key={index}
+                      className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-4 last:pb-0"
+                    >
+                      <h4 className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 mb-1">
+                        <Link href={post.href}>{post.title}</Link>
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(post.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
-              {/* Archives */}
-              <Card className="bg-slate-800/50 border-slate-700">
+              {/* Popular Tags */}
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-white">Archives</CardTitle>
+                  <CardTitle className="text-lg">Popular Tags</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {["March 2024", "February 2024", "January 2024", "December 2023", "November 2023"].map(
-                      (month, index) => (
-                        <a
-                          key={index}
-                          href="#"
-                          className="block text-slate-300 hover:text-emerald-400 transition-colors text-sm"
+                  <div className="flex flex-wrap gap-2">
+                    {["Security", "Monitoring", "Threats", "API", "Crypto", "Fintech", "Compliance", "AI"].map(
+                      (tag) => (
+                        <Badge
+                          key={tag}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
-                          {month}
-                        </a>
+                          <Tag className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
                       ),
                     )}
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact CTA */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Need Help?</CardTitle>
+                  <CardDescription>Have questions about security monitoring?</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link href="/contact">
+                    <Button className="w-full">Contact Our Experts</Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }
