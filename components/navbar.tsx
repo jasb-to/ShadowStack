@@ -3,14 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Shield, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Shield, Menu, X } from "lucide-react"
 
 const navigation = [
   { name: "Features", href: "/#features" },
   { name: "Pricing", href: "/pricing" },
   { name: "Demo", href: "/demo" },
-  { name: "Docs", href: "/docs" },
+  { name: "Blog", href: "/blog" },
   { name: "Help", href: "/help" },
 ]
 
@@ -24,9 +24,12 @@ export function Navbar() {
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5 flex items-center space-x-2">
             <Shield className="h-8 w-8 text-emerald-400" />
-            <span className="text-xl font-bold text-white">ShadowStack</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              ShadowStack
+            </span>
           </Link>
         </div>
+
         <div className="flex lg:hidden">
           <button
             type="button"
@@ -37,6 +40,7 @@ export function Navbar() {
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
+
         <div className="hidden lg:flex lg:gap-x-12">
           {navigation.map((item) => (
             <Link
@@ -50,6 +54,7 @@ export function Navbar() {
             </Link>
           ))}
         </div>
+
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
           <Link href="/sign-in">
             <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
@@ -57,7 +62,9 @@ export function Navbar() {
             </Button>
           </Link>
           <Link href="/sign-up">
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Get Started</Button>
+            <Button className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0">
+              Get Started
+            </Button>
           </Link>
         </div>
       </nav>
@@ -70,7 +77,9 @@ export function Navbar() {
             <div className="flex items-center justify-between">
               <Link href="/" className="-m-1.5 p-1.5 flex items-center space-x-2">
                 <Shield className="h-8 w-8 text-emerald-400" />
-                <span className="text-xl font-bold text-white">ShadowStack</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  ShadowStack
+                </span>
               </Link>
               <button
                 type="button"
@@ -88,7 +97,11 @@ export function Navbar() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-slate-300 hover:bg-slate-800 hover:text-emerald-400"
+                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors ${
+                        pathname === item.href
+                          ? "text-emerald-400 bg-slate-800"
+                          : "text-slate-300 hover:text-emerald-400 hover:bg-slate-800"
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {item.name}
@@ -98,14 +111,14 @@ export function Navbar() {
                 <div className="py-6 space-y-2">
                   <Link
                     href="/sign-in"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-slate-300 hover:bg-slate-800"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-slate-300 hover:text-white hover:bg-slate-800"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Sign in
                   </Link>
                   <Link
                     href="/sign-up"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-center bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Get Started
