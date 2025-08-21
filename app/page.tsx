@@ -91,14 +91,14 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="relative py-20 md:py-32 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10" />
-          <div className="container relative px-4 md:px-6">
+          <div className="container mx-auto relative px-4 md:px-6 max-w-7xl">
             <div className="flex flex-col items-center space-y-8 text-center">
               <Badge variant="outline" className="border-emerald-400/30 text-emerald-400 px-4 py-2">
                 <Building2 className="w-4 h-4 mr-2" />
                 Trusted by 150+ Crypto Exchanges
               </Badge>
 
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent max-w-5xl">
                 Enterprise Security
                 <br />
                 for Crypto Exchanges
@@ -109,7 +109,7 @@ export default function HomePage() {
                 hot wallets and build user trust with enterprise-grade security.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
                 <Button
                   asChild
                   size="lg"
@@ -130,7 +130,7 @@ export default function HomePage() {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-8 text-sm text-slate-400">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-400" />
                   No setup fees
@@ -150,7 +150,7 @@ export default function HomePage() {
 
         {/* Stats Section */}
         <section className="py-16 bg-slate-900/50">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
@@ -164,7 +164,7 @@ export default function HomePage() {
 
         {/* Features Section */}
         <section id="features" className="py-20">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-white mb-4">
                 Everything You Need to Secure Your Exchange
@@ -194,7 +194,7 @@ export default function HomePage() {
 
         {/* Testimonials Section */}
         <section className="py-20 bg-slate-900/50">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-white mb-4">
                 Trusted by Leading Exchanges
@@ -247,7 +247,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <section className="py-20">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
             <Card className="bg-gradient-to-r from-emerald-600/10 to-cyan-600/10 border-emerald-400/20">
               <CardContent className="p-12 text-center">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-white mb-4">

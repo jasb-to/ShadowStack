@@ -7,6 +7,27 @@ import { Input } from "@/components/ui/input"
 import { Search, Calendar, Clock, ArrowRight, TrendingUp, Shield, Brain, AlertTriangle, Eye, Zap } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "ShadowStack Blog - Crypto Security Insights & Tutorials",
+  description:
+    "Expert insights on cryptocurrency security, wallet protection, threat detection, and blockchain monitoring. Stay updated with the latest in crypto security.",
+  keywords:
+    "crypto security blog, cryptocurrency protection, wallet security, blockchain monitoring, threat detection, DeFi security, crypto exchange security",
+  authors: [{ name: "ShadowStack Security Team" }],
+  openGraph: {
+    title: "ShadowStack Blog - Crypto Security Insights",
+    description: "Expert insights on cryptocurrency security and threat detection",
+    type: "website",
+    url: "https://shadowstack.com/blog",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ShadowStack Blog - Crypto Security Insights",
+    description: "Expert insights on cryptocurrency security and threat detection",
+  },
+}
 
 const featuredPost = {
   title: "The Future of Crypto Security: AI-Powered Threat Detection",
@@ -18,6 +39,7 @@ const featuredPost = {
   category: "AI & Security",
   image: "/placeholder.jpg",
   featured: true,
+  slug: "ai-powered-threat-detection",
 }
 
 const blogPosts = [
@@ -30,6 +52,7 @@ const blogPosts = [
     readTime: "6 min read",
     category: "Security",
     image: "/placeholder.jpg",
+    slug: "wallet-security-best-practices-2024",
   },
   {
     title: "How to Set Up Real-Time Monitoring for Your Crypto Portfolio",
@@ -40,6 +63,7 @@ const blogPosts = [
     readTime: "5 min read",
     category: "Tutorial",
     image: "/placeholder.jpg",
+    slug: "real-time-crypto-monitoring-guide",
   },
   {
     title: "The Rise of DeFi Security Threats: What You Need to Know",
@@ -49,6 +73,7 @@ const blogPosts = [
     readTime: "7 min read",
     category: "DeFi",
     image: "/placeholder.jpg",
+    slug: "defi-security-threats-2024",
   },
   {
     title: "Machine Learning in Cryptocurrency: Detecting Anomalies",
@@ -58,6 +83,7 @@ const blogPosts = [
     readTime: "9 min read",
     category: "Technology",
     image: "/placeholder.jpg",
+    slug: "machine-learning-crypto-anomaly-detection",
   },
   {
     title: "Regulatory Updates: Global Crypto Security Standards",
@@ -67,6 +93,7 @@ const blogPosts = [
     readTime: "4 min read",
     category: "Regulation",
     image: "/placeholder.jpg",
+    slug: "global-crypto-security-regulations",
   },
   {
     title: "Case Study: Preventing a $50M Exchange Hack",
@@ -76,6 +103,7 @@ const blogPosts = [
     readTime: "10 min read",
     category: "Case Study",
     image: "/placeholder.jpg",
+    slug: "preventing-50m-exchange-hack-case-study",
   },
 ]
 
@@ -157,9 +185,11 @@ export default function BlogPage() {
                       </div>
                     </div>
                   </div>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
-                    Read Article
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                    <Link href={`/blog/${featuredPost.slug}`}>
+                      Read Article
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
                   </Button>
                 </div>
               </div>
@@ -210,7 +240,7 @@ export default function BlogPage() {
                     </div>
                     <CardHeader>
                       <CardTitle className="text-white text-xl leading-tight group-hover:text-emerald-400 transition-colors">
-                        <Link href="#" className="line-clamp-2">
+                        <Link href={`/blog/${post.slug}`} className="line-clamp-2">
                           {post.title}
                         </Link>
                       </CardTitle>
@@ -305,7 +335,7 @@ export default function BlogPage() {
                     {blogPosts.slice(0, 3).map((post, index) => (
                       <Link
                         key={index}
-                        href="#"
+                        href={`/blog/${post.slug}`}
                         className="block p-3 rounded-lg hover:bg-slate-700/50 transition-colors group"
                       >
                         <h4 className="text-slate-300 group-hover:text-white transition-colors text-sm font-medium line-clamp-2 mb-2">
